@@ -15,6 +15,7 @@ module Omnipay
 
     def call(env)
       @env = env
+      @request = nil
 
       # Are we on the request phase?
       return gateway_redirection if request_phase?
@@ -44,6 +45,9 @@ module Omnipay
       amount = request.GET['amount']
       raise ArgumentError.new('No amount specified') unless amount
 
+      context = request.GET['context']
+      store_context(context) if context
+
       method, url, params = request_phase(amount.to_i)
 
       case method
@@ -69,11 +73,26 @@ module Omnipay
     end
 
 
+    def store_context(context)
+      request.session['omnipay.context'] ||= {}
+      request.session['omnipay.context'][@uid] = context
+    end
+
+    def get_context
+      request.session['omnipay.context'] && request.session['omnipay.context'].delete(@uid)
+    end
+
+
     def extract_response_hash
 
       # Get the hash from the gateway implementation
       hash = callback_hash(request.params)
-      hash.merge!(:raw => request.params)
+      hash[:raw] = request.params
+
+      context = get_context
+      hash[:context] = context if context
+
+      hash
 
     end
 

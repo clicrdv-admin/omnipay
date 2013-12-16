@@ -19,17 +19,6 @@ describe Omnipay::Gateway do
 
   describe 'middleware interceptor' do
 
-    # Create a sample rack request
-    def request_env(path = '/', opts = {})
-      {
-        'REQUEST_METHOD' => 'GET',
-        'PATH_INFO' => path,
-        'rack.session' => {},
-        'rack.input' => StringIO.new('test=true')
-      }.merge(opts)
-    end
-
-
     describe 'request phase' do
 
       it 'should leave alone requests not matching the gateway\'s request path' do
@@ -181,5 +170,53 @@ describe Omnipay::Gateway do
     end
 
   end
+
+
+  describe 'context storing' do
+
+    before(:each) do
+
+      # Simulate a working gateway implementation
+      MyGateway.any_instance
+        .stub(:request_phase)
+        .and_return(['GET', 'http://host.tld', {}])
+
+      MyGateway.any_instance
+        .stub(:callback_hash)
+        .and_return({
+          :success => true,
+          :amount => 1095,
+          :reference => 'REF-123',
+        })
+    end
+
+    let(:context){ {'foo' => 'bar', 'baz' => 'boo'} }
+
+    it 'should store a given "context" hash' do
+      browser.get '/pay/my_gateway', :amount => 1295, :context => context
+      browser.last_request.session['omnipay.context'].should == {'my_gateway' => context}
+    end
+
+    it 'should retrieve the hash and put it in the callback' do
+      browser.get '/pay/my_gateway/callback', {}, {'rack.session' => {'omnipay.context' => {'my_gateway' => context}}}
+      browser.last_request.env['omnipay.response'][:context].should == context
+      browser.last_request.env['rack.session']['omnipay.context'].should == {}
+    end
+
+    it 'should namespace the hash for each gateway' do
+      browser.get '/pay/my_gateway/callback', {}, {'rack.session' => {'omnipay.context' => {'another_gateway' => context}}}
+      browser.last_request.env['omnipay.response'][:context].should == nil
+    end
+
+  end
+
+
+
+  describe 'configuration' do
+
+    pending
+
+  end
+
 
 end
