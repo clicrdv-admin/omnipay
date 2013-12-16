@@ -179,7 +179,7 @@ class Omnipay::Gateway::Aphone < Omnipay::Gateway::Base
   # * the HTTP method to use ('GET' ot 'POST')
   # * the url to call
   # * the parameters (in the url as GET, or x-www-form-urlencoded in the body as POST)
-  def request_phase
+  def request_phase(amount)
     [
       options.payment_method,
       options.payment_url,
@@ -197,10 +197,10 @@ class Omnipay::Gateway::Aphone < Omnipay::Gateway::Base
   # Returns the response hash which will be accessible in the callback action
   # Must contain the following keys :
   # * success (boolean) : was the payment successful or not
-  # * amount (integer) : the amount actually paid, in cents
+  # * amount (integer) : the amount actually paid, in cents, if successful
   # * error (string) : the error code if the payment was not successful
-  # * reference (string) : the reference of the payment given by the payment gateway
-  def callback_hash
+  # * reference (string) : the reference of the payment given by the payment gateway, if successful
+  def callback_hash(gateway_callback_params)
 
     if MyHelper.valid_reponse(gateway_callback_params)
       {

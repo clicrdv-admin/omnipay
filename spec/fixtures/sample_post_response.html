@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      window.onload=function(){
+        document.getElementById('autosubmit-form').submit();
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>Redirecting...</h1>
+    <form method="POST" id="autosubmit-form" action="https://payment.gateway.tld">
+      <input type="hidden" name="amount" value="1295"/>
+      <input type="hidden" name="ref" value="REF-123"/>
+      <input type="hidden" name="sig" value="MTI5NQ=="/>
+    </form>
+  </body>
+</html>
