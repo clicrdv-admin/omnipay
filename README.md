@@ -174,27 +174,32 @@ class Omnipay::Gateway::Aphone < Omnipay::Gateway::Base
     :payment_method => 'POST'
   }
 
-  # Request phase url
-  def request_url
-    options.payment_url
+  # Request phase
+  # Returns an array with 3 elements :
+  # * the HTTP method to use ('GET' ot 'POST')
+  # * the url to call
+  # * the parameters (in the url as GET, or x-www-form-urlencoded in the body as POST)
+  def request_phase
+    [
+      options.payment_method,
+      options.payment_url,
+      MyHelper.encode_params(
+        :public_key => options.public_key, # No default value, will have to be defined in the config
+        :private_key => options.private_key,
+        :amount => amount
+      )
+    ]
   end
 
-  # Request phase HTTP method
-  def request_method
-    options.payment_method
-  end
-
-  # Request phase params
-  def request_params(amount)
-    MyHelper.compute_params_for(
-      :public_key => options.public_key, # No default value, will have to be defined in the config
-      :private_key => options.private_key,
-      :amount => amount
-    )
-  end
 
 
-  # Callback phase response hash
+  # Callback phase
+  # Returns the response hash which will be accessible in the callback action
+  # Must contain the following keys :
+  # * success (boolean) : was the payment successful or not
+  # * amount (integer) : the amount actually paid, in cents
+  # * error (string) : the error code if the payment was not successful
+  # * reference (string) : the reference of the payment given by the payment gateway
   def callback_hash
 
     if MyHelper.valid_reponse(gateway_callback_params)
@@ -228,10 +233,14 @@ TODO ...
 
 ## Deployment
 
-Install the `gem-release` gem [documentation](http://github.com/svenfuchs/gem-release)
+Install the `gem-release` gem 
+
+[documentation](http://github.com/svenfuchs/gem-release)
 
 `gem bump`
+
 `gem tag`
+
 `gem release`
 
 
