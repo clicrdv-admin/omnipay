@@ -1,9 +1,32 @@
 require 'spec_helper'
 
 
-# A sample omnipay gateway
-class MyGateway
-  include Omnipay::Gateway
+# A sample omnipay adapter
+class GatewayAdapter
+
+  def initialize(config)
+    @config = config
+  end
+
+  def request_phase(amount)
+    ['GET', 'http://host.tld', {:amount => amount, :signature => "25abb63df816dc57"}]
+  end
+
+  def callback_hash(params)
+    if params["SIG"] == "MTI5NQ=="
+      {
+        :success   => true,
+        :amount    => params["amount"].to_i,
+        :reference => params["ref"]
+      }
+    else
+      {
+        :success => false,
+        :error   => 'wrong_signature'
+      }
+    end
+  end
+
 end
 
 
@@ -14,7 +37,7 @@ describe Omnipay::Gateway do
 
   # The same app with the sample gateway plugged under '/pay/my_gateway'
   let(:gateway_uid){'my_gateway'}
-  let(:app_with_middleware){MyGateway.new(app, gateway_uid)}
+  let(:app_with_middleware){Omnipay::Gateway.new(app, :adapter => GatewayAdapter, :uid => gateway_uid)}
   let(:browser){Rack::Test::Session.new(Rack::MockSession.new(app_with_middleware))}
 
   describe 'middleware interceptor' do
@@ -54,11 +77,11 @@ describe Omnipay::Gateway do
       it 'should intercept requests matching the gateway\'s request path' do
 
         # It should defer to the gateway for the request path
-        MyGateway
+        GatewayAdapter
           .any_instance
           .should_receive(:request_phase)
           .with(1295)
-          .and_return(['GET', 'http://host.tld', {}])
+          .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
 
@@ -67,43 +90,22 @@ describe Omnipay::Gateway do
 
       it 'should respond with a redirect for GET requests' do
 
-        # Simulate a working gateway implementation
-        MyGateway
-          .any_instance
-          .stub(:request_phase)
-          .and_return([
-            'GET', 
-            'https://payment.gateway.tld', 
-            {
-              :amount => 1295,
-              :signature => "25abb63df816dc57fd0134056f20b69d9d81a5dd583c4b3416c7043becd33a2e70cc812614027f8180b77cdcd04020c42ac3eb5e38849ab0b96dd1f264731a6a"
-            }
-          ])
-
         browser.get '/pay/my_gateway?amount=1295'
 
         browser.last_response.redirect?.should be_true
         browser.last_response.body.should == ""
-        browser.last_response['Location'].should == 'https://payment.gateway.tld?amount=1295&signature=25abb63df816dc57fd0134056f20b69d9d81a5dd583c4b3416c7043becd33a2e70cc812614027f8180b77cdcd04020c42ac3eb5e38849ab0b96dd1f264731a6a'
+        browser.last_response['Location'].should == 'http://host.tld?amount=1295&signature=25abb63df816dc57'
 
       end
 
 
       it 'should respond with an autosubmitted html form for POST requests' do
 
-        # Simulate a working gateway implementation
-        MyGateway
+        GatewayAdapter
           .any_instance
-          .stub(:request_phase)
-          .and_return([
-            'POST', 
-            'https://payment.gateway.tld', 
-            {
-              :amount => 1295,
-              :ref    => "REF-123",
-              :sig    => "MTI5NQ=="
-            }
-          ])
+          .should_receive(:request_phase)
+          .with(1295)
+          .and_return(['POST', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
 
@@ -132,7 +134,7 @@ describe Omnipay::Gateway do
       it 'should intercept requests matching the gateway\'s callback path' do
 
         # Simulate a working gateway implementation
-        MyGateway
+        GatewayAdapter
           .any_instance
           .stub(:callback_hash)
           .with({
@@ -174,22 +176,6 @@ describe Omnipay::Gateway do
 
   describe 'context storing' do
 
-    before(:each) do
-
-      # Simulate a working gateway implementation
-      MyGateway.any_instance
-        .stub(:request_phase)
-        .and_return(['GET', 'http://host.tld', {}])
-
-      MyGateway.any_instance
-        .stub(:callback_hash)
-        .and_return({
-          :success => true,
-          :amount => 1095,
-          :reference => 'REF-123',
-        })
-    end
-
     let(:context){ {'foo' => 'bar', 'baz' => 'boo'} }
 
     it 'should store a given "context" hash' do
@@ -214,7 +200,14 @@ describe Omnipay::Gateway do
 
   describe 'configuration' do
 
-    pending
+    it 'should initialize the adapter with the given config' do
+
+    end
+
+
+    it 'should allow wildcard adapters' do
+
+    end
 
   end
 
