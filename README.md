@@ -32,19 +32,19 @@ You will first need to plug an Omnipay MangoPay Gateway in your application
 # config/initializers/omnipay.rb
 Rails.application.configure do |config|
 
-  # An omnipay gateway will take two arguments :
-  # 
-  # * The first one is an unique identifier which will be used
+  # An omnipay gateway is configured with a hash with the following keys :
+  # * :uid : an unique identifier which will be used
   #   to generate 2 urls. One for sending the user to the payment
   #   gateway, and one for the user's return from the gateway.
   #
-  # * The second one is a configuration hash. Configuration can be
-  #   generic or gateway-specific, see below for more details.
+  # * :adapter : the integration of this payment gateway
+  #
+  # * :config : a config hash passed to the adapter
 
-  config.middleware.use(
-    Omnipay::Gateway::Mangopay,
-    'sandbox',
-    {
+  config.middleware.use Omnipay::Gateway,
+    :uid      => 'sandbox',
+    :adapter  => Omnipay::Adapters::Mangopay,
+    :config   => {
       :public_key  => "azerty1234",
       :private_key => "azerty1234",
       :wallet_id   => 12345
@@ -118,18 +118,21 @@ The initializer is a static file only loaded at the applications's start. You ma
 # for a shop having this id, and will forward to its payment page. 
 # The callback will still be on `/pay/:shop_id/callback`
 
-config.middleware.use(
-  Omnipay::Gateway::Mangopay do |uid|
+config.middleware.use Omnipay::Gateway do |uid|
 
     shop = Shop.find(uid)
 
     # If no config is returned, the request is forwarded to the app, which may 404
     return unless shop && shop.has_mangopay_config?
 
+    # This is the same syntax as above, without the uid
     return {
-      :public_key  => shop.mangopay_public_key,
-      :private_key => shop.mangopay_private_key,
-      :wallet_id   => shop.mangopay_wallet_id
+      :adapter => Omnipay::Adapters::Mangopay,
+      :config  => {
+        :public_key  => shop.mangopay_public_key,
+        :private_key => shop.mangopay_private_key,
+        :wallet_id   => shop.mangopay_wallet_id        
+      }
     }
   end
 )
@@ -160,42 +163,47 @@ TODO ...
 
 
 
-## Create a new Gateway
+## Create a new Adapter
 
-TODO ...
+An omnipay gateway adapter is a class who must implement the following interface :
 
 ```ruby
-class Omnipay::Gateway::Aphone < Omnipay::Gateway::Base
+class Omnipay::Adapters::Aphone
 
-  # Options which can be overriden in the config
-  # and found in the :options accessor
-  DEFAULT_OPTIONS = {
-    :payment_url => 'https://secure.oneclicpay.com'
-    :payment_method => 'POST'
-  }
+  # This is the same config as defined in the initializer
+  # It is up to you to decide which fields are mandatory, and to validate their presence
+  def initialize(config)
+    @config = config
+  end
 
-  # Request phase
-  # Returns an array with 3 elements :
+
+  # Request phase : defines the redirection to the payment gateway
+  # Inputs 
+  # * amount (integer) : the amount in cents to pay
+  # * reference (string, optional) : an order reference to forward to the payment gateway
+  # Outputs: array with 3 elements :
   # * the HTTP method to use ('GET' ot 'POST')
   # * the url to call
-  # * the parameters (in the url as GET, or x-www-form-urlencoded in the body as POST)
-  def request_phase(amount)
+  # * the parameters (will be in the url if GET, or as x-www-form-urlencoded in the body if POST)
+  def request_phase(amount, reference = nil)
     [
-      options.payment_method,
-      options.payment_url,
-      MyHelper.encode_params(
-        :public_key => options.public_key, # No default value, will have to be defined in the config
-        :private_key => options.private_key,
-        :amount => amount
-      )
+      'POST'
+      'https://secure.homologation.oneclicpay.com',
+      {
+        :montant => amount,
+        :idTPE   => @config[:public_key],
+        :devise  => 'EUR',
+        [...]
+      }
     ]
   end
 
 
 
-  # Callback phase
-  # Returns the response hash which will be accessible in the callback action
-  # Must contain the following keys :
+  # Callback hash : extracts the response hash which will be accessible in the callback action
+  # Inputs
+  # * params (Hash) : the GET/POST parameters returned by the payment gateway
+  # Outputs : a Hash which must contain the following keys :
   # * success (boolean) : was the payment successful or not
   # * amount (integer) : the amount actually paid, in cents, if successful
   # * error (string) : the error code if the payment was not successful
