@@ -24,14 +24,14 @@ module Omnipay
       @env = env
       @request = nil   
 
-      # Check if the middleware has to do something
-      if path = check_matching_path!
+      # Check if the middleware has to do something (request or callback)
+      if phase = check_matching_path!
 
         # Are we on the request phase?
-        return gateway_redirection if path == :request
+        return response_for_request_phase if phase == :request
 
         # Are we on the callback phase?
-        request.env['omnipay.response'] = extract_response_hash if path == :callback
+        request.env['omnipay.response'] = callback_phase_response_hash if phase == :callback
 
       end
 
@@ -43,8 +43,8 @@ module Omnipay
 
     private
 
-
-    def gateway_redirection
+    # Request phase : returns a Rack::Response
+    def response_for_request_phase
       amount = request.GET['amount']
       raise ArgumentError.new('No amount specified') unless amount
 
@@ -64,35 +64,39 @@ module Omnipay
     end
 
 
+    # GET redirection : 302 redirect
     def get_redirection(url, params)
       redirect_url = url + '?' + Rack::Utils.build_query(params)
       Rack::Response.new.tap{|response| response.redirect(redirect_url)}
     end
 
 
+    # POST redirection : autosubmitted form
     def post_redirection(url, params)
       form = AutosubmitForm.new(url, params)
       Rack::Response.new([form.html], 200)
     end
 
 
+    # Store and restores the request's context
     def store_context(context)
       request.session['omnipay.context'] ||= {}
       request.session['omnipay.context'][@uid] = context
     end
 
-    def get_context
+    def pop_stored_context
       request.session['omnipay.context'] && request.session['omnipay.context'].delete(@uid)
     end
 
 
-    def extract_response_hash
+    # Builds the 'omnipay.response' hash for the callback phase
+    def callback_phase_response_hash
 
       # Get the hash from the gateway implementation
       hash = @adapter.callback_hash(request.params)
       hash[:raw] = request.params
 
-      context = get_context
+      context = pop_stored_context
       hash[:context] = context if context
 
       hash
@@ -110,7 +114,6 @@ module Omnipay
       return unless path.start_with? BASE_PATH
 
       if @dynamic_config
-        puts "checking config for #{path}"
         @uid, @adapter = extract_uid_and_adapter(path)
         return unless @uid
       end
@@ -121,6 +124,7 @@ module Omnipay
     end
 
 
+    # For the dynamic config, tries to get an adapter for a given uid
     def extract_uid_and_adapter(path)
       # We know the request starts with '/pay' . The second path component is the uid
       uid = path.split('/')[2]
@@ -133,6 +137,7 @@ module Omnipay
     end
 
 
+    # The current Rack::Request
     def request
       @request ||= Rack::Request.new(@env)
     end
