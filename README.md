@@ -70,10 +70,9 @@ def callback
   # In this action you have access to the hash request.env['omnipay.response']
   # This reponse hash is independant of the chosen gateway and will look like this : 
   {
-    :gateway => <Omnipay::Gateway::Mangopay> # The gateway which processed the payment.
     :amount => 1295 # The amount in cents payed by the user.
     :success => true # Was the payment successful or not.
-    :error_code => :invalid_pin # An error code if the payment was not successful.
+    :error => :invalid_pin # An error code if the payment was not successful.
     :reference => "O-12XFD-987" # The payment's reference in the gateway platform.
     :raw => <Hash> # The raw response params from the gateway
   }
@@ -141,30 +140,6 @@ config.middleware.use Omnipay::Gateway do |uid|
 )
 ```
 
-## Global omnipay configuration
-
-TODO ...
-
-
-## Gateway configuration
-
-TODO ...
-
-
-## Payment URL options
-
-Required arguments :
- * `amount` : The amount in cents to pay.
-
-Optional arguments :
- * `reference` : The order reference to be used in the gateway.
-
-
-## Callback options
-
-TODO ...
-
-
 
 ## Create a new Adapter
 
@@ -183,12 +158,11 @@ class Omnipay::Adapters::Aphone
   # Request phase : defines the redirection to the payment gateway
   # Inputs 
   # * amount (integer) : the amount in cents to pay
-  # * reference (string, optional) : an order reference to forward to the payment gateway
   # Outputs: array with 3 elements :
   # * the HTTP method to use ('GET' ot 'POST')
   # * the url to call
   # * the parameters (will be in the url if GET, or as x-www-form-urlencoded in the body if POST)
-  def request_phase(amount, reference = nil)
+  def request_phase(amount)
     [
       'POST'
       'https://secure.homologation.oneclicpay.com',
