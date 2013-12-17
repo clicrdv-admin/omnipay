@@ -56,13 +56,13 @@ end
 
 This configuration will make your app respond to two urls :
 
- * `GET /pay/mangopay/sandbox?amount=xxxx` will forward your user to mangopay for paying the xxxx amount (in cents)
- * `GET /pay/mangopay/sandbox/callback` will be called when the payment process is complete. You will need to create a route to handle this request in your application
+ * `GET /pay/sandbox?amount=xxxx` will forward your user to mangopay for paying the xxxx amount (in cents)
+ * `GET /pay/sandbox/callback` will be called when the payment process is complete. You will need to create a route to handle this request in your application
 
 
 ```ruby
 # config/routes.rb
-get '/pay/:gateway_name/:gateway_id/callback', :to => "payments#callback"
+get '/pay/:gateway_id/callback', :to => "payments#callback"
 
 # app/controllers/payments_controller.rb
 def callback
@@ -90,7 +90,7 @@ You may want to have more informations in the callback. For example, if you have
 ```ruby
 
 # app/views/orders/payment.html.erb
-<%= link_to '/pay/mangopay/sandbox', 
+<%= link_to '/pay/sandbox', 
             :amount => @order.amount, 
             :context => {:order_id => @order.id} %>
 
@@ -114,9 +114,9 @@ The initializer is a static file only loaded at the applications's start. You ma
 ```ruby
 # config/initializer/omnipay.rb
 
-# Using this configuration, each call to /pay/mangopay/:shop_id will look 
+# Using this configuration, each call to /pay/:shop_id will look 
 # for a shop having this id, and will forward to its payment page. 
-# The callback will still be on `/pay/mangopay/:shop_id/callback`
+# The callback will still be on `/pay/:shop_id/callback`
 
 config.middleware.use(
   Omnipay::Gateway::Mangopay do |uid|
