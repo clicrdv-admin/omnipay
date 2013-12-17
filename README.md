@@ -122,18 +122,21 @@ config.middleware.use Omnipay::Gateway do |uid|
 
     shop = Shop.find(uid)
 
-    # If no config is returned, the request is forwarded to the app, which may 404
-    return unless shop && shop.has_mangopay_config?
-
-    # This is the same syntax as above, without the uid
-    return {
-      :adapter => Omnipay::Adapters::Mangopay,
-      :config  => {
-        :public_key  => shop.mangopay_public_key,
-        :private_key => shop.mangopay_private_key,
-        :wallet_id   => shop.mangopay_wallet_id        
+    if shop && shop.has_mangopay_config?
+      # This is the same syntax as above, without the uid
+      {
+        :adapter => Omnipay::Adapters::Mangopay,
+        :config  => {
+          :public_key  => shop.mangopay_public_key,
+          :private_key => shop.mangopay_private_key,
+          :wallet_id   => shop.mangopay_wallet_id        
+        }
       }
-    }
+
+      # Do not call "return", this will crash the middleware
+    end
+
+    # If no config found, the request is forwarded to the app, which will likely 404
   end
 )
 ```

@@ -200,16 +200,77 @@ describe Omnipay::Gateway do
 
   describe 'configuration' do
 
-    it 'should initialize the adapter with the given config' do
+    class AdapterWithConfig
+
+      def initialize(config)
+        @public_key = config[:public_key]
+      end
+
+      def request_phase(amount)
+        ['GET', 'http://host.tld', {:public_key => @public_key}]
+      end
 
     end
 
 
-    it 'should allow wildcard adapters' do
+    describe 'with static configuration' do
+
+      let(:app_with_middleware){
+        Omnipay::Gateway.new(
+          app, 
+          :adapter => AdapterWithConfig, 
+          :uid => 'gateway_with_config', 
+          :config => {:public_key => "public_key"}
+        )
+      }
+
+      let(:browser){Rack::Test::Session.new(Rack::MockSession.new(app_with_middleware))}
+
+
+      it 'should initialize the adapter with the given config' do
+
+        browser.get '/pay/gateway_with_config', :amount => 1295
+
+        browser.last_response['Location'].should == 'http://host.tld?public_key=public_key'
+      end
+
+    end
+
+
+    describe 'with runtime configuration' do
+
+      let(:app_with_dynamic_middleware){
+        Omnipay::Gateway.new(app) do |uid|
+          if uid != "wrong_uid"
+            {
+              :adapter => AdapterWithConfig, 
+              :config => {:public_key => "public_key_#{uid}"}
+            }
+          end
+        end
+      }
+
+      let(:browser){Rack::Test::Session.new(Rack::MockSession.new(app_with_dynamic_middleware))}
+
+
+      it 'should ignore non matching endpoints' do
+        browser.get '/pay/wrong_uid'
+
+        browser.last_response.status.should == 404
+        browser.last_response.body.should   == 'App : Not Found'
+      end
+
+
+      it 'should allow wildcard adapters with dynamic config' do
+        browser.get '/pay/uid1?amount=1295'
+        browser.last_response['Location'].should == 'http://host.tld?public_key=public_key_uid1'
+
+        browser.get '/pay/uid2?amount=1295'
+        browser.last_response['Location'].should == 'http://host.tld?public_key=public_key_uid2'
+      end
 
     end
 
   end
-
 
 end

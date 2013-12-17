@@ -5,23 +5,35 @@ module Omnipay
   # Gateway middleware
   class Gateway
 
-    def initialize(app, options)
+    BASE_PATH = '/pay'
+
+    def initialize(app, options={}, &block)
       @app = app
-      @uid = options[:uid]
-      @adapter = options[:adapter].new(options[:config])
       @env = nil
+
+      if block
+        @dynamic_config = block
+      else
+        @uid = options[:uid]
+        @adapter = options[:adapter].new(options[:config])
+      end
     end
 
 
     def call(env)
       @env = env
-      @request = nil
+      @request = nil   
 
-      # Are we on the request phase?
-      return gateway_redirection if request_phase?
+      # Check if the middleware has to do something
+      if path = check_matching_path!
 
-      # Are we on the callback phase?
-      request.env['omnipay.response'] = extract_response_hash if callback_phase?
+        # Are we on the request phase?
+        return gateway_redirection if path == :request
+
+        # Are we on the callback phase?
+        request.env['omnipay.response'] = extract_response_hash if path == :callback
+
+      end
 
       # Otherwise, continue down the middleware chain
       @app.call(@env)
@@ -43,9 +55,9 @@ module Omnipay
 
       case method
       when 'GET'
-        return get_redirection(url, params)
+        get_redirection(url, params)
       when 'POST'
-        return post_redirection(url, params)
+        post_redirection(url, params)
       else
         raise TypeError.new('request_phase returned http method must be \'GET\' or \'POST\'')
       end
@@ -88,13 +100,36 @@ module Omnipay
     end
 
 
-    def request_phase?
-      request.request_method == 'GET' && request.path == "/pay/#{@uid}"
+    # Check if the url matches the request or callback phase for the gateway
+    # Also extracts the configuration for dynamic gateways
+    # Returns :request or :callback if the path matches, nil otherwise
+    def check_matching_path!
+
+      path = request.path
+
+      return unless path.start_with? BASE_PATH
+
+      if @dynamic_config
+        puts "checking config for #{path}"
+        @uid, @adapter = extract_uid_and_adapter(path)
+        return unless @uid
+      end
+
+      return :request  if path == "#{BASE_PATH}/#{@uid}" && request.request_method == 'GET'
+      return :callback if path == "#{BASE_PATH}/#{@uid}/callback"
+
     end
 
 
-    def callback_phase?
-      request.path == "/pay/#{@uid}/callback"
+    def extract_uid_and_adapter(path)
+      # We know the request starts with '/pay' . The second path component is the uid
+      uid = path.split('/')[2]
+      return unless uid
+
+      opts = @dynamic_config.call(uid)
+      return unless opts
+
+      [uid, opts[:adapter].new(opts[:config])]
     end
 
 
