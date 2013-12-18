@@ -15,25 +15,25 @@ module Omnipay
         @dynamic_config = block
       else
         @uid = options[:uid]
-        @adapter = options[:adapter].new(options[:config])
+        @adapter_class = options[:adapter]
+        @adapter_config = options[:config] || {}
       end
     end
 
 
     def call(env)
       @env = env
-      @request = nil   
+      @request = @adapter = nil # Cleanup memoized instance variables
 
-      # Check if the middleware has to do something (request or callback)
-      if phase = check_matching_path!
+      # If the config is dynamic, we have to dermine it from the current path (which contains the potential uid)
+      extract_config_from_path! if @dynamic_config
 
-        # Are we on the request phase?
-        return response_for_request_phase if phase == :request
+      # Are we on the request phase?
+      return response_for_request_phase if request_phase?
 
-        # Are we on the callback phase?
-        request.env['omnipay.response'] = callback_phase_response_hash if phase == :callback
-
-      end
+      # Are we on the callback phase?
+      request.env['omnipay.response'] = callback_phase_response_hash if callback_phase?
+      @env['REQUEST_METHOD'] = 'GET'
 
       # Otherwise, continue down the middleware chain
       @app.call(@env)
@@ -45,13 +45,13 @@ module Omnipay
 
     # Request phase : returns a Rack::Response
     def response_for_request_phase
-      amount = request.GET['amount']
+      amount = request.GET.delete('amount')
       raise ArgumentError.new('No amount specified') unless amount
 
-      context = request.GET['context']
+      context = request.GET.delete('context')
       store_context(context) if context
 
-      method, url, params = @adapter.request_phase(amount.to_i)
+      method, url, params = adapter.request_phase(amount.to_i, request.GET)
 
       case method
       when 'GET'
@@ -74,7 +74,7 @@ module Omnipay
     # POST redirection : autosubmitted form
     def post_redirection(url, params)
       form = AutosubmitForm.new(url, params)
-      Rack::Response.new([form.html], 200)
+      Rack::Response.new([form.html], 200, {'Content-Type' => 'text/html;charset=utf-8'})
     end
 
 
@@ -93,7 +93,7 @@ module Omnipay
     def callback_phase_response_hash
 
       # Get the hash from the gateway implementation
-      hash = @adapter.callback_hash(request.params)
+      hash = adapter.callback_hash(request.params.dup)
       hash[:raw] = request.params
 
       context = pop_stored_context
@@ -104,36 +104,40 @@ module Omnipay
     end
 
 
-    # Check if the url matches the request or callback phase for the gateway
-    # Also extracts the configuration for dynamic gateways
-    # Returns :request or :callback if the path matches, nil otherwise
-    def check_matching_path!
-
-      path = request.path
-
-      return unless path.start_with? BASE_PATH
-
-      if @dynamic_config
-        @uid, @adapter = extract_uid_and_adapter(path)
-        return unless @uid
-      end
-
-      return :request  if path == "#{BASE_PATH}/#{@uid}" && request.request_method == 'GET'
-      return :callback if path == "#{BASE_PATH}/#{@uid}/callback"
-
-    end
-
-
-    # For the dynamic config, tries to get an adapter for a given uid
-    def extract_uid_and_adapter(path)
-      # We know the request starts with '/pay' . The second path component is the uid
-      uid = path.split('/')[2]
+    # In the case of dynamic config, extract it from the current path
+    def extract_config_from_path!     
+      uid = request.path.gsub(/^#{BASE_PATH}/, '').split('/')[1]
       return unless uid
 
       opts = @dynamic_config.call(uid)
       return unless opts
+  
+      @uid = uid
+      @adapter_class = opts[:adapter]
+      @adapter_config = opts[:config] || {}
+    end
 
-      [uid, opts[:adapter].new(opts[:config])]
+
+    def adapter
+      return unless @uid && @adapter_class # Dynamic config speedup
+
+      adapter_options = @adapter_config.merge(
+        :callback_url => callback_url,
+      )
+
+      @adapter ||= @adapter_class.new(adapter_options)
+    end
+
+    def request_phase?
+      adapter && request.path == "#{BASE_PATH}/#{@uid}" && request.request_method == 'GET'
+    end
+
+    def callback_phase?
+      adapter && request.path == "#{BASE_PATH}/#{@uid}/callback"
+    end
+
+    def callback_url
+      "#{request.base_url}#{BASE_PATH}/#{@uid}/callback"
     end
 
 

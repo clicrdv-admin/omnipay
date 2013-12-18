@@ -8,7 +8,7 @@ class GatewayAdapter
     @config = config
   end
 
-  def request_phase(amount)
+  def request_phase(amount, params = {})
     ['GET', 'http://host.tld', {:amount => amount, :signature => "25abb63df816dc57"}]
   end
 
@@ -80,7 +80,7 @@ describe Omnipay::Gateway do
         GatewayAdapter
           .any_instance
           .should_receive(:request_phase)
-          .with(1295)
+          .with(1295, {})
           .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
@@ -104,13 +104,36 @@ describe Omnipay::Gateway do
         GatewayAdapter
           .any_instance
           .should_receive(:request_phase)
-          .with(1295)
+          .with(1295, {})
           .and_return(['POST', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
 
         browser.last_response.status.should == 200
+        browser.last_response['Content-Type'].should == 'text/html;charset=utf-8'
         browser.last_response.body.should == File.read(File.join(File.dirname(__FILE__), '..', '..', 'spec/fixtures/sample_post_response.html'))
+
+      end
+
+
+      it "should send the GET params in the request phase" do
+
+        GatewayAdapter
+          .any_instance
+          .should_receive(:request_phase)
+          .with(1295, {'foo' => 'bar'})
+          .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
+
+        browser.get '/pay/my_gateway?amount=1295&foo=bar'
+
+      end
+
+
+      it "should generate the callback url and send it to the adapter at initialisation" do
+
+        GatewayAdapter.should_receive(:new).with({:callback_url=>"http://example.org/pay/my_gateway/callback"}).at_least(:once)
+
+        browser.get '/pay/my_gateway?amount=1295&foo=bar'
 
       end
 
@@ -206,7 +229,7 @@ describe Omnipay::Gateway do
         @public_key = config[:public_key]
       end
 
-      def request_phase(amount)
+      def request_phase(amount, params={})
         ['GET', 'http://host.tld', {:public_key => @public_key}]
       end
 

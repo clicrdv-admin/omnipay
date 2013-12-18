@@ -1,0 +1,13 @@
+<h1 style="margin: 1em 0;">Choose your plan</h1>
+
+<% @items.each do |item| %>
+
+  <div class="large-4 columns">
+    <ul class="pricing-table">
+      <li class="title"><%= item[:name] %></li>
+      <li class="price"><%= '%.2f €' % (item[:price].to_f/100) %></li>
+      <li class="cta-button"><a class="button" href="/pay/afone?amount=<%= item[:price] %>&product=<%= item[:name] %>">Buy Now</a></li>
+    </ul>
+  </div>
+
+<% end %>

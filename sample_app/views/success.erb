@@ -1,0 +1,10 @@
+<h1 style="margin: 1em 0;">Payment successfully accepted!</h1>
+
+<div class="panel">
+
+  <p><strong>Montant payé : </strong><%= '%.2f €' % (@amount.to_f / 100) %></p>
+  <p><strong>Référence : </strong><%= @reference %></p>
+
+</div>
+
+<a href="/">Home</a>
