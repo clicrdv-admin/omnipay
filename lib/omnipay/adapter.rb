@@ -35,7 +35,7 @@ module Omnipay
     def build_strategy
       return nil unless strategy_class
 
-      strategy_class.new(strategy_config)
+      strategy_class.new(@callback_url, strategy_config)
     end
 
     def strategy_class
@@ -43,9 +43,7 @@ module Omnipay
     end
 
     def strategy_config
-      (params[:config] || {}).merge(
-        :callback_url => @callback_url
-      )
+      params[:config] || {}
     end
 
     def params

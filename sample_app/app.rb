@@ -3,7 +3,7 @@ require 'sinatra/base'
 require 'json'
 
 require 'omnipay'
-require './afone_adapter.rb'
+require 'omnipay/adapters/oneclicpay'
 
 require 'dotenv'
 Dotenv.load
@@ -12,10 +12,11 @@ class OmnipaySampleApp < Sinatra::Base
 
   use Omnipay::Gateway, 
     :uid => "afone",
-    :adapter => AfoneAdapter,
+    :adapter => Omnipay::Adapters::Oneclicpay,
     :config => {
       :tpe_id => ENV['PUBLIC_KEY'],
-      :secret_key => ENV['PRIVATE_KEY']
+      :secret_key => ENV['PRIVATE_KEY'],
+      :sandbox => true
     }
 
 
@@ -39,7 +40,7 @@ class OmnipaySampleApp < Sinatra::Base
   # Custom price
   post '/custom-price' do
     amount = (params[:price].to_f * 100).to_i
-    redirect to("/pay/afone?amount=#{amount}&product=Custom")
+    redirect to("/pay/afone?amount=#{amount}")
   end
 
   # Payment callback handling

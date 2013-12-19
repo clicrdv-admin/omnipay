@@ -4,7 +4,7 @@ require 'spec_helper'
 # A sample omnipay adapter
 class GatewayAdapter
 
-  def initialize(config)
+  def initialize(callback_url, config)
     @config = config
   end
 
@@ -131,7 +131,7 @@ describe Omnipay::Gateway do
 
       it "should generate the callback url and send it to the adapter at initialisation" do
 
-        GatewayAdapter.should_receive(:new).with({:callback_url=>"http://example.org/pay/my_gateway/callback"}).at_least(:once)
+        GatewayAdapter.should_receive(:new).with("http://example.org/pay/my_gateway/callback", {}).at_least(:once)
 
         browser.get '/pay/my_gateway?amount=1295&foo=bar'
 
@@ -225,7 +225,7 @@ describe Omnipay::Gateway do
 
     class AdapterWithConfig
 
-      def initialize(config)
+      def initialize(callback_url, config)
         @public_key = config[:public_key]
       end
 

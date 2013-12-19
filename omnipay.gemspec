@@ -18,4 +18,5 @@ Gem::Specification.new do |s|
   s.rubyforge_project = '[none]'
 
   s.add_dependency 'rack'
+  s.add_dependency 'httparty' # For adapters implementation
 end
