@@ -23,7 +23,7 @@ class AfoneAdapter
 
     if params["result"] == "OK"
 
-      # We have to fetch the payed amount
+      # We have to fetch the payed amount via the API
       reference = params["transactionId"]
       amount = get_transaction_amount(reference)
 
@@ -35,6 +35,8 @@ class AfoneAdapter
 
     elsif params["result"] == "NOK"
   
+      puts params.inspect
+
       {
         :success => false,
         :error => params["reason"]

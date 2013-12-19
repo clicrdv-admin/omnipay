@@ -27,11 +27,6 @@ class OmnipaySampleApp < Sinatra::Base
         :desc  => ""
       },
       {
-        :name  => "Item 2",
-        :price => 1290,
-        :desc  => ""
-      },
-      {
         :name  => "Item 3",
         :price => 1490,
         :desc  => ""
@@ -39,6 +34,12 @@ class OmnipaySampleApp < Sinatra::Base
     ]
 
     erb :home
+  end
+
+  # Custom price
+  post '/custom-price' do
+    amount = (params[:price].to_f * 100).to_i
+    redirect to("/pay/afone?amount=#{amount}&product=Custom")
   end
 
   # Payment callback handling
