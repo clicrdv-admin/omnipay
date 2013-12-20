@@ -18,8 +18,11 @@ module Omnipay
     private
 
     def response_hash
-      hash = @adapter.callback_hash(@request.params.dup)
-      hash[:raw] = @request.params
+      # Symbolize the keys
+      params = Hash[@request.params.map{|k,v|[k.to_sym,v]}]
+
+      hash = @adapter.callback_hash(params)
+      hash[:raw] = params
       hash[:context] = context if context
       hash
     end

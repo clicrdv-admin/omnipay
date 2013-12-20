@@ -81,6 +81,14 @@ end
 
 ```
 
+## Optional parameters when calling the payment url
+
+You may specify these parameters when calling the payment url. They may or may not be supported, and other may be available. Check your adapter documentation.
+
+- `reference` : the payment reference to be used in the gateway
+- `title` : a title to display on the payment page, referencing what is paid
+- `locale` : the language to use in the payment process (ISO 639-1)
+
 
 ## Give context to the callback
 
@@ -150,7 +158,8 @@ class Omnipay::Adapters::Aphone
 
   # This is the same config as defined in the initializer
   # It is up to you to decide which fields are mandatory, and to validate their presence
-  def initialize(config)
+  def initialize(callback_url, config = {})
+    @callback_url = callback_url
     @config = config
   end
 
@@ -158,6 +167,8 @@ class Omnipay::Adapters::Aphone
   # Request phase : defines the redirection to the payment gateway
   # Inputs 
   # * amount (integer) : the amount in cents to pay
+  # * options (Hash) : optional parameters for this payment. See above.
+  #   e.g reference to use, title to display, ... 
   # Outputs: array with 3 elements :
   # * the HTTP method to use ('GET' ot 'POST')
   # * the url to call
@@ -190,13 +201,13 @@ class Omnipay::Adapters::Aphone
     if MyHelper.valid_reponse(gateway_callback_params)
       {
         :success => true,
-        :amount => gateway_callback_params['amount'],
-        :reference => gateway_callback_params['transactionRef']
+        :amount => gateway_callback_params[:amount],
+        :reference => gateway_callback_params[:transactionRef]
       }
     else
       {
         :success => false,
-        :error => (case gateway_callback_params['responseCode']
+        :error => (case gateway_callback_params[:responseCode]
           when 207
           :payment_refused
           when 221
@@ -213,7 +224,10 @@ end
 
 ## Error Codes
 
-TODO ...
+ - `Omnipay::CANCELATION` : A cancelation from the user
+ - `Omnipay::PAYMENT_REFUSED` : The gateway or the bank refused the payment
+ - `Omnipay::INVALID_RESPONSE` : The validation of the response from the payment gateway has failed
+
 
 
 ## Deployment

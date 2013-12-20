@@ -37,6 +37,7 @@ class OmnipaySampleApp < Sinatra::Base
     erb :home
   end
 
+
   # Custom price
   post '/custom-price' do
     amount = (params[:price].to_f * 100).to_i
@@ -53,7 +54,22 @@ class OmnipaySampleApp < Sinatra::Base
 
       erb :success
     else
-      @error = response[:error]
+      case response[:error]
+      when Omnipay::CANCELATION
+
+        @error = "La transaction a été annulée"
+
+      when Omnipay::INVALID_RESPONSE
+
+        @error = "Erreur lors du traitement de la réponse"
+        @details = response[:raw].to_yaml
+
+      when Omnipay::PAYMENT_REFUSED
+
+        @error = "Le paiement a été refusé"
+        @details = response[:raw]["reason"]
+
+      end
 
       erb :failure
     end

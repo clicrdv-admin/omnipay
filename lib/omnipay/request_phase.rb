@@ -37,7 +37,8 @@ module Omnipay
       params.delete 'amount'
       params.delete 'context'
 
-      params
+      # Symbolize the keys
+      Hash[params.map{|k,v|[k.to_sym,v]}]
     end
 
     def get_redirect_response(url, params)

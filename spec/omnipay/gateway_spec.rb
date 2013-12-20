@@ -121,7 +121,7 @@ describe Omnipay::Gateway do
         GatewayAdapter
           .any_instance
           .should_receive(:request_phase)
-          .with(1295, {'foo' => 'bar'})
+          .with(1295, {:foo => 'bar'})
           .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295&foo=bar'
@@ -161,9 +161,9 @@ describe Omnipay::Gateway do
           .any_instance
           .stub(:callback_hash)
           .with({
-            "amount" => "1295",
-            "ref" => "REF-123",
-            "sig" => "MTI5NQ"
+            :amount => "1295",
+            :ref => "REF-123",
+            :sig => "MTI5NQ"
           })
           .and_return({
             :success => true,
@@ -180,9 +180,9 @@ describe Omnipay::Gateway do
           :amount => 1295,
           :reference => 'REF-123',
           :raw => {
-            "amount" => "1295",
-            "ref" => "REF-123",
-            "sig" => "MTI5NQ"
+            :amount => "1295",
+            :ref => "REF-123",
+            :sig => "MTI5NQ"
           }
         }
 
