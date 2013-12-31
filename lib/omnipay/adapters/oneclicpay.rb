@@ -16,9 +16,15 @@ module Omnipay
     class Oneclicpay
 
       HTTP_METHOD = 'POST'
+
       REDIRECT_URLS = {
         :sandbox => 'https://secure.homologation.oneclicpay.com',
         :production => 'https://secure.oneclicpay.com'
+      }
+
+      VALIDATION_URLS = {
+        :sandbox => 'https://secure.homologation.oneclicpay.com:60000',
+        :production => 'https://secure.oneclicpay.com:60000'
       }
 
       def initialize(callback_url, config)
@@ -39,7 +45,7 @@ module Omnipay
 
         [
           HTTP_METHOD,
-          (@is_sandbox ? REDIRECT_URLS[:sandbox] : REDIRECT_URLS[:production]),
+          redirect_url,
           redirect_params_for(amount, product_name, transaction_id, locale)
         ]
       end
@@ -47,23 +53,25 @@ module Omnipay
 
       def callback_hash(params)
 
-        if params["result"] == "NOK" && params["reason"] == "Abandon de la transaction."
+        if params[:result] == "NOK" && params[:reason] == "Abandon de la transaction."
           return { :success => false, :error => Omnipay::CANCELATION }
         end
 
-        # if !@is_sandbox && !valid_signature?(params)
-        #   return { :success => false, :error => Omnipay::INVALID_RESPONSE }
-        # end
 
+        if params[:result] == "OK"
 
-        if params["result"] == "OK"
-
-          # We have to fetch the payed amount via the API
-          reference = params["transactionId"]
+          # Validate the response via the API
+          reference = params[:transactionId]
           amount = get_transaction_amount(reference)
-          { :success => true, :amount => amount, :reference => reference }
 
-        elsif params["result"] == "NOK"
+          if amount
+            { :success => true, :amount => amount, :reference => reference }
+          else
+            { :success => false, :error => Omnipay::INVALID_RESPONSE }
+          end
+
+
+        elsif params[:result] == "NOK"
           { :success => false, :error => Omnipay::PAYMENT_REFUSED }
 
         else
@@ -89,7 +97,6 @@ module Omnipay
         }
       end
 
-
       def random_transaction_id
         "#{Time.now.to_i}-#{@tpe_id}-#{random_token}"
       end
@@ -103,16 +110,18 @@ module Omnipay
         Digest::SHA512.hexdigest(Base64.encode64(to_sign).gsub(/\n/, ''))
       end
 
-      # def valid_signature?(params)
-      #   params = params.dup
-      #   (sig = params.delete('sec')) && signature(params).upcase == sig.upcase
-      # end
-
       def get_transaction_amount(transaction_id)
-        response = HTTParty.post("https://secure.homologation.oneclicpay.com:60000/rest/payment/find?serialNumber=#{@tpe_id}&key=#{@secret_key}&transactionRef=#{transaction_id}")
-        response.parsed_response["transaction"][0]["amount"]
+        response = HTTParty.post("#{validation_url}/rest/payment/find?serialNumber=#{@tpe_id}&key=#{@secret_key}&transactionRef=#{transaction_id}")
+        (response.parsed_response["transaction"][0]["ok"] != 0) && response.parsed_response["transaction"][0]["amount"]
       end
 
+      def redirect_url
+        @is_sandbox ? REDIRECT_URLS[:sandbox] : REDIRECT_URLS[:production]
+      end
+
+      def validation_url
+        @is_sandbox ? VALIDATION_URLS[:sandbox] : VALIDATION_URLS[:production]
+      end
 
     end
 
