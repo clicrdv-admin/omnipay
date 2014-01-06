@@ -46,7 +46,7 @@ describe Omnipay::Adapters::Oneclicpay do
 
     before(:each) do
       Kernel.srand(0) # Reset the RNG
-      Time.stub!(:now).and_return(Time.at(1388491766)) # Freeze the time
+      Time.stub(:now).and_return(Time.at(1388491766)) # Freeze the time
     end
 
 
@@ -64,7 +64,8 @@ describe Omnipay::Adapters::Oneclicpay do
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
           :sec => "d39155c351027f2110a5757097e4434e362bf2a584685e200f274adc6e7f3e70d9eeaf520c4ccb88b443dba18a1b211c40890882477945e983204010fae1b6d0"          
-        }
+        },
+        '1388491766-tpe_id-mpv'
       ]
     end
 
@@ -89,13 +90,14 @@ describe Omnipay::Adapters::Oneclicpay do
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
           :sec => "13c067d6e2cf48804336e0f2d6591fe28f1710c7f1baaa9a43fa8383976ff7fca14a6ec2ac2455681d372edaf8b35353b996e7008dce0f28c6eb6ee530a65f69"          
-        }
+        },
+        'reference'
       ]
     end
 
     it "should generate a random transaction id if none specified" do
-      transaction_id_1 = adapter.request_phase(amount).last[:idTransaction]
-      transaction_id_2 = adapter.request_phase(amount).last[:idTransaction]
+      transaction_id_1 = adapter.request_phase(amount)[2][:idTransaction]
+      transaction_id_2 = adapter.request_phase(amount)[2][:idTransaction]
 
       transaction_id_1.should_not == transaction_id_2
     end
@@ -153,7 +155,7 @@ describe Omnipay::Adapters::Oneclicpay do
       }
 
       VCR.use_cassette('good_validation', :record => :new_episodes) do
-        adapter.callback_hash(good_response_params).should == {:success => true, :amount => 990, :reference => '1388506232-VAD-495-130-uuh'}
+        adapter.callback_hash(good_response_params).should == {:success => true, :amount => 990, :transaction_id => '1388506232-VAD-495-130-uuh'}
       end
 
     end

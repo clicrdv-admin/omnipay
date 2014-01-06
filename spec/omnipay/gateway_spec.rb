@@ -9,22 +9,15 @@ class GatewayAdapter
   end
 
   def request_phase(amount, params = {})
-    ['GET', 'http://host.tld', {:amount => amount, :signature => "25abb63df816dc57"}]
+    ['GET', 'http://host.tld', {:amount => amount, :signature => "25abb63df816dc57"}, "transaction_id"]
   end
 
   def callback_hash(params)
-    if params["SIG"] == "MTI5NQ=="
-      {
-        :success   => true,
-        :amount    => params["amount"].to_i,
-        :reference => params["ref"]
-      }
-    else
-      {
-        :success => false,
-        :error   => 'wrong_signature'
-      }
-    end
+    {
+      :success   => true,
+      :amount    => params[:amount].to_i,
+      :transaction_id => params[:ref]
+    }
   end
 
 end
@@ -39,6 +32,10 @@ describe Omnipay::Gateway do
   let(:gateway_uid){'my_gateway'}
   let(:app_with_middleware){Omnipay::Gateway.new(app, :adapter => GatewayAdapter, :uid => gateway_uid)}
   let(:browser){Rack::Test::Session.new(Rack::MockSession.new(app_with_middleware))}
+
+  before(:all) do
+    Omnipay.configuration.secret_token = "azerty1234"
+  end    
 
   describe 'middleware interceptor' do
 
@@ -159,6 +156,14 @@ describe Omnipay::Gateway do
         # Simulate a working gateway implementation
         GatewayAdapter
           .any_instance
+          .stub(:request_phase)
+          .with(1295, {})
+          .and_return([
+            'GET',
+            'my_url',
+            {},
+            'REF-123'
+          ])
           .stub(:callback_hash)
           .with({
             :amount => "1295",
@@ -168,17 +173,23 @@ describe Omnipay::Gateway do
           .and_return({
             :success => true,
             :amount => 1295,
-            :reference => 'REF-123',
+            :transaction_id => 'REF-123',
           })
 
 
-        browser.get '/pay/my_gateway/callback?amount=1295&ref=REF-123&sig=MTI5NQ'
+        # First call the request phase, to have a valid signature
+        browser.get '/pay/my_gateway?amount=1295'
+
+        browser.last_request.session['omnipay.signature']['my_gateway'].should == 'FtXZhYwdWCWG48OIarwmCOqOYzw%3D%0A'
+
+        browser.get '/pay/my_gateway/callback?amount=1295&ref=REF-123&sig=MTI5NQ', {}, {'rack.session' => {'omnipay.signature' => {'my_gateway' => 'FtXZhYwdWCWG48OIarwmCOqOYzw%3D%0A'}}}
 
         # The request should have the processed response in its environment
         browser.last_request.env['omnipay.response'].should == {
           :success => true,
           :amount => 1295,
-          :reference => 'REF-123',
+          :transaction_id => 'REF-123',
+          :context => {},
           :raw => {
             :amount => "1295",
             :ref => "REF-123",
@@ -214,7 +225,7 @@ describe Omnipay::Gateway do
 
     it 'should namespace the hash for each gateway' do
       browser.get '/pay/my_gateway/callback', {}, {'rack.session' => {'omnipay.context' => {'another_gateway' => context}}}
-      browser.last_request.env['omnipay.response'][:context].should == nil
+      browser.last_request.env['omnipay.response'][:context].should == {}
     end
 
   end
