@@ -1,0 +1,83 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/users/natural
+    body:
+      encoding: UTF-8
+      string: '{"Email":"user-1388491766-mpv@host.tld","FirstName":"User 1388491766-mpv","LastName":"User
+        1388491766-mpv","Birthday":1388491766,"Nationality":"FR","CountryOfResidence":"FR"}'
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '346'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Fri, 03 Jan 2014 11:40:18 GMT
+    body:
+      encoding: UTF-8
+      string: '{"FirstName":"User 1388491766-mpv","LastName":"User 1388491766-mpv","Address":null,"Birthday":1388491766,"Nationality":"FR","CountryOfResidence":"FR","Occupation":null,"IncomeRange":null,"ProofOfIdentity":null,"ProofOfAddress":null,"PersonType":"NATURAL","Email":"user-1388491766-mpv@host.tld","Id":"MANGOPAY_USER_ID","Tag":null,"CreationDate":1388491766}'
+    http_version: 
+  recorded_at: Fri, 03 Jan 2014 11:40:18 GMT
+- request:
+    method: post
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/payins/card/web
+    body:
+      encoding: UTF-8
+      string: '{"AuthorId":"MANGOPAY_USER_ID","DebitedFunds":{"Currency":"EUR","Amount":1295},"Fees":{"Currency":"EUR","Amount":0},"CreditedWalletId":"wallet_id","ReturnURL":"http://callback.url","Culture":"FR","CardType":"CB_VISA_MASTERCARD"}'
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '735'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Fri, 03 Jan 2014 11:40:19 GMT
+    body:
+      encoding: UTF-8
+      string: '{"Id":"MANGOPAY_PAYMENT_ID","Tag":null,"CreationDate":1388491766,"AuthorId":"MANGOPAY_USER_ID","CreditedUserId":"MANGOPAY_USER_ID","DebitedFunds":{"Currency":"EUR","Amount":1295},"CreditedFunds":{"Currency":"EUR","Amount":1295},"Fees":{"Currency":"EUR","Amount":0},"Status":"CREATED","ResultCode":null,"ResultMessage":null,"ExecutionDate":null,"Type":"PAYIN","Nature":"REGULAR","CreditedWalletId":"1349169","DebitedWalletId":null,"PaymentType":"CARD","ExecutionType":"WEB","RedirectURL":"https://homologation-secure-p.payline.com/webpayment/?reqCode=prepareStep2&stepCode=step2&token=MANGOPAY_TOKEN","ReturnURL":"http://callback.url/?transactionId=MANGOPAY_PAYMENT_ID","TemplateURL":null,"CardType":"CB_VISA_MASTERCARD","Culture":"FR","SecureMode":"DEFAULT"}'
+    http_version: 
+  recorded_at: Fri, 03 Jan 2014 11:40:19 GMT
+
+recorded_with: VCR 2.8.0

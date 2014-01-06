@@ -43,7 +43,7 @@ module Omnipay
 
     def get_redirect_response(url, params)
       redirect_url = url + '?' + Rack::Utils.build_query(params)
-      Rack::Response.new.tap{|response| response.redirect(redirect_url)}      
+      Rack::Response.new.tap{|response| response.redirect(redirect_url)}
     end
 
     def post_redirect_response(url, params)

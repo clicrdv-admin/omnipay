@@ -1,16 +1,22 @@
 <h1 style="margin: 1em 0;">Choose your plan</h1>
 
-<% @items.each do |item| %>
 
-  <div class="large-4 columns">
-    <ul class="pricing-table">
-      <li class="title"><%= item[:name] %></li>
-      <li class="price"><%= '%.2f €' % (item[:price].to_f/100) %></li>
-      <li class="cta-button"><a class="button" href="/pay/afone?amount=<%= item[:price] %>&title=<%= item[:name] %>&locale=en">Buy Now</a></li>
-    </ul>
-  </div>
+<div class="large-4 columns">
+  <ul class="pricing-table">
+    <li class="title">Item 1 (Oneclicpay)</li>
+    <li class="price"><%= '%.2f €' % (995.to_f/100) %></li>
+    <li class="cta-button"><a class="button" href="/pay/afone?amount=995&title=Item%201&locale=en">Buy Now</a></li>
+  </ul>
+</div>
 
-<% end %>
+
+<div class="large-4 columns">
+  <ul class="pricing-table">
+    <li class="title">Item 2 (Mangopay)</li>
+    <li class="price"><%= '%.2f €' % (1295.to_f/100) %></li>
+    <li class="cta-button"><a class="button" href="/pay/mangopay?amount=1295&title=Item%202&locale=en">Buy Now</a></li>
+  </ul>
+</div>
 
 
 <form action="/custom-price" method="post">

@@ -4,6 +4,7 @@ require 'json'
 
 require 'omnipay'
 require 'omnipay/adapters/oneclicpay'
+require 'omnipay/adapters/mangopay'
 
 require 'dotenv'
 Dotenv.load
@@ -14,26 +15,24 @@ class OmnipaySampleApp < Sinatra::Base
     :uid => "afone",
     :adapter => Omnipay::Adapters::Oneclicpay,
     :config => {
-      :tpe_id => ENV['PUBLIC_KEY'],
-      :secret_key => ENV['PRIVATE_KEY'],
+      :tpe_id => ENV['AFONE_PUBLIC_KEY'],
+      :secret_key => ENV['AFONE_PRIVATE_KEY'],
       :sandbox => true
     }
 
 
-  get '/' do
-    @items = [
-      {
-        :name  => "Item 1",
-        :price => 990,
-        :desc  => ""
-      },
-      {
-        :name  => "Item 3",
-        :price => 1490,
-        :desc  => ""
-      }
-    ]
 
+  use Omnipay::Gateway, 
+    :uid => "mangopay",
+    :adapter => Omnipay::Adapters::Mangopay,
+    :config => {
+      :client_id => ENV['MANGOPAY_PUBLIC_KEY'],
+      :client_passphrase => ENV['MANGOPAY_PRIVATE_KEY'],
+      :wallet_id => ENV['MANGOPAY_WALLET_ID']
+    }
+
+
+  get '/' do
     erb :home
   end
 
