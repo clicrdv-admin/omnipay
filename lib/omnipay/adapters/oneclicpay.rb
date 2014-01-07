@@ -46,7 +46,8 @@ module Omnipay
         [
           HTTP_METHOD,
           redirect_url,
-          redirect_params_for(amount, product_name, transaction_id, locale)
+          redirect_params_for(amount, product_name, transaction_id, locale),
+          transaction_id
         ]
       end
 
@@ -61,11 +62,11 @@ module Omnipay
         if params[:result] == "OK"
 
           # Validate the response via the API
-          reference = params[:transactionId]
-          amount = get_transaction_amount(reference)
+          transaction_id = params[:transactionId]
+          amount = get_transaction_amount(transaction_id)
 
           if amount
-            { :success => true, :amount => amount, :reference => reference }
+            { :success => true, :amount => amount, :transaction_id => transaction_id }
           else
             { :success => false, :error => Omnipay::INVALID_RESPONSE }
           end

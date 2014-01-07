@@ -11,6 +11,15 @@ Dotenv.load
 
 class OmnipaySampleApp < Sinatra::Base
 
+  # Enable :sessions is buggy ...
+  use Rack::Session::Cookie, :key => 'rack.session',
+                             :path => '/',
+                             :secret => 'my_session_secret'
+  
+  Omnipay.configure do |config|
+    config.secret_token = "7f394e59be2bac6222eff91232d15dbc"
+  end
+
   use Omnipay::Gateway, 
     :uid => "afone",
     :adapter => Omnipay::Adapters::Oneclicpay,
@@ -67,6 +76,11 @@ class OmnipaySampleApp < Sinatra::Base
 
         @error = "Le paiement a été refusé"
         @details = response[:raw]["reason"]
+
+      when Omnipay::WRONG_SIGNATURE
+
+        @error = "La réponse ne correspond pas au paiement qui était demandé"
+        @details = response[:raw].merge(:session => session).to_yaml
 
       end
 

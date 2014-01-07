@@ -9,9 +9,12 @@ module Omnipay
     end
 
     def response
-      store_context!
+      method, url, params, transaction_id = @adapter.request_phase(amount, adapter_params)
 
-      method, url, params = @adapter.request_phase(amount, adapter_params)
+      context = store_context!
+
+      signature = Signer.new(transaction_id, amount, context).signature
+      store_signature!(signature)
 
       if method == 'GET'
         get_redirect_response(url, params)
@@ -54,9 +57,19 @@ module Omnipay
     # Store the request's context in session
     def store_context!
       context = @request.params.delete('context')
-      return unless context
-      @request.session['omnipay.context'] ||= {}
-      @request.session['omnipay.context'][@adapter.uid] = context
+
+      if context
+        @request.session['omnipay.context'] ||= {}
+        @request.session['omnipay.context'][@adapter.uid] = context
+      end
+
+      return context
+    end
+
+    # Store the requests signature in the session
+    def store_signature!(signature)
+      @request.session['omnipay.signature'] ||= {}
+      @request.session['omnipay.signature'][@adapter.uid] = signature
     end
 
   end

@@ -32,6 +32,11 @@ You will first need to plug an Omnipay MangoPay Gateway in your application
 # config/initializers/omnipay.rb
 Rails.application.configure do |config|
 
+  # You will first need to give a secret token to omnipay, here or in an initializer
+  Omnipay.configure do |config|
+    config.secret_token = "my-secret-token"
+  end
+
   # An omnipay gateway is configured with a hash with the following keys :
   # * :uid : an unique identifier which will be used
   #   to generate 2 urls. One for sending the user to the payment
@@ -169,11 +174,13 @@ class Omnipay::Adapters::Aphone
   # * amount (integer) : the amount in cents to pay
   # * options (Hash) : optional parameters for this payment. See above.
   #   e.g reference to use, title to display, ... 
-  # Outputs: array with 3 elements :
+  # Outputs: array with 4 elements :
   # * the HTTP method to use ('GET' ot 'POST')
   # * the url to call
   # * the parameters (will be in the url if GET, or as x-www-form-urlencoded in the body if POST)
+  # * a id referencing the transaction which will be accessible in the callback phase
   def request_phase(amount)
+    transaction_id = generate_unique_id()
     [
       'POST'
       'https://secure.homologation.oneclicpay.com',
@@ -181,8 +188,10 @@ class Omnipay::Adapters::Aphone
         :montant => amount,
         :idTPE   => @config[:public_key],
         :devise  => 'EUR',
+        :transactionRef => transaction_id
         [...]
-      }
+      },
+      transaction_id
     ]
   end
 
@@ -195,14 +204,14 @@ class Omnipay::Adapters::Aphone
   # * success (boolean) : was the payment successful or not
   # * amount (integer) : the amount actually paid, in cents, if successful
   # * error (string) : the error code if the payment was not successful
-  # * reference (string) : the reference of the payment given by the payment gateway, if successful
+  # * transaction_id(string) : the unique id generated in the request phase, if successful
   def callback_hash(gateway_callback_params)
 
     if MyHelper.valid_reponse(gateway_callback_params)
       {
         :success => true,
         :amount => gateway_callback_params[:amount],
-        :reference => gateway_callback_params[:transactionRef]
+        :transaction_id => gateway_callback_params[:transactionRef]
       }
     else
       {
@@ -227,7 +236,7 @@ end
  - `Omnipay::CANCELATION` : A cancelation from the user
  - `Omnipay::PAYMENT_REFUSED` : The gateway or the bank refused the payment
  - `Omnipay::INVALID_RESPONSE` : The validation of the response from the payment gateway has failed
-
+ - `Omnipay::WRONG_SIGNATURE` : The response doesn't match the signature generated in the request phase
 
 
 ## Deployment
