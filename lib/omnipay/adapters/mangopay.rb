@@ -51,23 +51,55 @@ module Omnipay
           :SecureMode => 'FORCE'
         )
 
+        transaction_id = payment_creation_response["Id"]
         redirect_url = payment_creation_response["RedirectURL"]
         uri = URI(redirect_url)
 
         url = "#{uri.scheme}://#{uri.host}#{uri.path}"
         params = Rack::Utils.parse_nested_query(uri.query)
 
-        puts "Response : #{payment_creation_response.inspect}\n"
-        ['GET', url, params].tap{|res| puts "Response : #{res.inspect}"}
+        ['GET', url, params, transaction_id]
 
       end
 
 
       def callback_hash(params)
 
-        # 2.0.0-p247 :004 > c.get '/payins/1350428'
-        #  => {"Id"=>"1350428", "Tag"=>nil, "CreationDate"=>1388764897, "AuthorId"=>"1350427", "CreditedUserId"=>"1348459", "DebitedFunds"=>{"Currency"=>"EUR", "Amount"=>1295}, "CreditedFunds"=>{"Currency"=>"EUR", "Amount"=>1295}, "Fees"=>{"Currency"=>"EUR", "Amount"=>0}, "Status"=>"SUCCEEDED", "ResultCode"=>"000000", "ResultMessage"=>"Success", "ExecutionDate"=>1388764911, "Type"=>"PAYIN", "Nature"=>"REGULAR", "CreditedWalletId"=>"1349169", "DebitedWalletId"=>nil, "PaymentType"=>"CARD", "ExecutionType"=>"WEB", "RedirectURL"=>"https://homologation-secure-p.payline.com/webpayment/?reqCode=prepareStep2&stepCode=step2&token=1Rez0tZKBG73P6WF2wPC1388764897642", "ReturnURL"=>"http://localhost:9393/pay/mangopay/callback?transactionId=1350428", "TemplateURL"=>nil, "CardType"=>"CB_VISA_MASTERCARD", "Culture"=>"FR", "SecureMode"=>"DEFAULT", "code"=>200}
+        transaction_id = params[:transactionId]
 
+        response = @client.get "/payins/#{transaction_id}"
+
+        # Check if the response is valid
+        if response['code'] != 200
+          return {
+            :success => false,
+            :error => Omnipay::INVALID_RESPONSE
+          }
+        end
+
+
+        # Successful transaction
+        if response['Status'] == 'SUCCEEDED'
+          {
+            :success => true,
+            :amount => response['DebitedFunds']['Amount'],
+            :transaction_id => transaction_id
+          }
+        else
+
+          # Cancelation
+          if ['101001', '101002'].include? response['ResultCode']
+            {
+              :success => false,
+              :error => Omnipay::CANCELATION
+            }
+          else
+            {
+              :success => false,
+              :error => Omnipay::PAYMENT_REFUSED
+            }
+          end
+        end
       end
 
 

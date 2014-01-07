@@ -1,0 +1,161 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/payins/wrong-transaction-id
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '235'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Tue, 07 Jan 2014 11:17:29 GMT
+    body:
+      encoding: UTF-8
+      string: '{"Message":"The ressource does not exist","Type":"ressource_not_found","Id":"ERROR_ID","Date":1389093450.0,"errors":{"RessourceNotFound":"Cannot
+        found the ressource PayIn with the id=wrong-transaction-id "}}'
+    http_version: 
+  recorded_at: Tue, 07 Jan 2014 11:17:29 GMT
+- request:
+    method: get
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/payins/canceled-transaction-id
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '805'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Tue, 07 Jan 2014 11:19:32 GMT
+    body:
+      encoding: UTF-8
+      string: '{"Id":"canceled-transaction-id","Tag":null,"CreationDate":1389091966,"AuthorId":"MANGOPAY_USER_ID","CreditedUserId":"MANGOPAY_USER_ID","DebitedFunds":{"Currency":"EUR","Amount":1295},"CreditedFunds":{"Currency":"EUR","Amount":1295},"Fees":{"Currency":"EUR","Amount":0},"Status":"FAILED","ResultCode":"101002","ResultMessage":"The
+        transaction has been cancelled by the user","ExecutionDate":null,"Type":"PAYIN","Nature":"REGULAR","CreditedWalletId":"wallet_id","DebitedWalletId":null,"PaymentType":"CARD","ExecutionType":"WEB","RedirectURL":"https://homologation-secure-p.payline.com/webpayment/?reqCode=prepareStep2&stepCode=step2&token=MANGOPAY_TOKEN","ReturnURL":"http://localhost:9393/pay/mangopay/callback?transactionId=canceled-transaction-id","TemplateURL":null,"CardType":"CB_VISA_MASTERCARD","Culture":"FR","SecureMode":"DEFAULT"}'
+    http_version: 
+  recorded_at: Tue, 07 Jan 2014 11:19:32 GMT
+- request:
+    method: get
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/payins/successful-transaction-id
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '775'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Tue, 07 Jan 2014 11:21:00 GMT
+    body:
+      encoding: UTF-8
+      string: '{"Id":"successful-transaction-id","Tag":null,"CreationDate":1389092483,"AuthorId":"MANGOPAY_USER_ID","CreditedUserId":"MANGOPAY_USER_ID","DebitedFunds":{"Currency":"EUR","Amount":1295},"CreditedFunds":{"Currency":"EUR","Amount":1295},"Fees":{"Currency":"EUR","Amount":0},"Status":"SUCCEEDED","ResultCode":"000000","ResultMessage":"Success","ExecutionDate":1389092494,"Type":"PAYIN","Nature":"REGULAR","CreditedWalletId":"wallet_id","DebitedWalletId":null,"PaymentType":"CARD","ExecutionType":"WEB","RedirectURL":"https://homologation-secure-p.payline.com/webpayment/?reqCode=prepareStep2&stepCode=step2&token=MANGOPAY_TOKEN","ReturnURL":"http://localhost:9393/pay/mangopay/callback?transactionId=successful-transaction-id","TemplateURL":null,"CardType":"CB_VISA_MASTERCARD","Culture":"FR","SecureMode":"DEFAULT"}'
+    http_version: 
+  recorded_at: Tue, 07 Jan 2014 11:21:00 GMT
+- request:
+    method: get
+    uri: https://client_id:client_passphrase@api.sandbox.mangopay.com/v2/client_id/payins/refused-transaction-id
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Cache-Control:
+      - no-cache
+      Pragma:
+      - no-cache
+      Content-Length:
+      - '775'
+      Content-Type:
+      - application/json; charset=utf-8
+      Expires:
+      - '-1'
+      Server:
+      - Microsoft-IIS/8.0
+      X-Aspnet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      Date:
+      - Tue, 07 Jan 2014 11:21:00 GMT
+    body:
+      encoding: UTF-8
+      string: '{"Id":"refused-transaction-id","Tag":null,"CreationDate":1389095313,"AuthorId":"MANGOPAY_USER_ID","CreditedUserId":"MANGOPAY_USER_ID","DebitedFunds":{"Currency":"EUR","Amount":33355},"CreditedFunds":{"Currency":"EUR","Amount":33355},"Fees":{"Currency":"EUR","Amount":0},"Status":"FAILED","ResultCode":"105103","ResultMessage":"Invalid PIN code","ExecutionDate":null,"Type":"PAYIN","Nature":"REGULAR","CreditedWalletId":"wallet_id","DebitedWalletId":null,"PaymentType":"CARD","ExecutionType":"WEB","RedirectURL":"https://homologation-secure-p.payline.com/webpayment/?reqCode=prepareStep2&stepCode=step2&token=MANGOPAY_TOKEN","ReturnURL":"http://localhost:9393/pay/mangopay/callback?transactionId=refused-transaction-id","TemplateURL":null,"CardType":"CB_VISA_MASTERCARD","Culture":"FR","SecureMode":"DEFAULT"}'
+    http_version: 
+  recorded_at: Tue, 07 Jan 2014 11:50:10 GMT
+recorded_with: VCR 2.8.0

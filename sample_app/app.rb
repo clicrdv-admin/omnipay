@@ -58,7 +58,7 @@ class OmnipaySampleApp < Sinatra::Base
 
     if response[:success]
       @amount = response[:amount]
-      @reference = response[:reference]
+      @reference = response[:transaction_id]
 
       erb :success
     else

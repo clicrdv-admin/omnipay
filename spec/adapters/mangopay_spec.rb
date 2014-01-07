@@ -40,28 +40,66 @@ describe Omnipay::Adapters::Mangopay do
 
     before(:each) do
       Kernel.srand(0) # Reset the RNG
-      Time.stub!(:now).and_return(Time.at(1388491766)) # Freeze the time
+      Time.stub(:now).and_return(Time.at(1388491766)) # Freeze the time
     end
 
     it "should build a valid request" do
 
-      VCR.use_cassette('mangopay_request_phase', :record => :new_episodes) do      
+      VCR.use_cassette('mangopay_request_phase') do      
         adapter.request_phase(amount).should == [
           'GET',
           'https://homologation-secure-p.payline.com/webpayment/',
-          {'reqCode' => 'prepareStep2', 'stepCode' => 'step2', 'token' => 'MANGOPAY_TOKEN'}
+          {'reqCode' => 'prepareStep2', 'stepCode' => 'step2', 'token' => 'MANGOPAY_TOKEN'},
+          'MANGOPAY_PAYMENT_ID'
         ]
       end
 
     end
-
 
   end
 
 
   describe "#callback_hash" do
 
-    pending
+    it "should handle a successful response" do
+      VCR.use_cassette('mangopay_callback_phase') do      
+        adapter.callback_hash(:transactionId => 'successful-transaction-id').should == {
+          :success => true, 
+          :amount => 1295, 
+          :transaction_id => 'successful-transaction-id'
+        }
+      end
+    end
+
+
+    it "should handle a cancelation" do
+      VCR.use_cassette('mangopay_callback_phase') do      
+        adapter.callback_hash(:transactionId => 'canceled-transaction-id').should == {
+          :success => false,
+          :error => Omnipay::CANCELATION
+        }
+      end
+    end
+
+
+    it "should handle a payment error" do
+      VCR.use_cassette('mangopay_callback_phase') do      
+        adapter.callback_hash(:transactionId => 'refused-transaction-id').should == {
+          :success => false,
+          :error => Omnipay::PAYMENT_REFUSED
+        }
+      end
+    end
+
+
+    it "should handle a wrong response" do
+      VCR.use_cassette('mangopay_callback_phase') do      
+        adapter.callback_hash(:transactionId => 'wrong-transaction-id').should == {
+          :success => false,
+          :error => Omnipay::INVALID_RESPONSE
+        }
+      end
+    end
 
   end
 

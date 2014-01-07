@@ -75,7 +75,7 @@ describe Omnipay::Adapters::Oneclicpay do
       locale = "en"
 
       adapter.request_phase(amount, 
-                            :reference => reference, 
+                            :transaction_id => reference, 
                             :title => title, 
                             :locale => locale).should == [
         'POST',

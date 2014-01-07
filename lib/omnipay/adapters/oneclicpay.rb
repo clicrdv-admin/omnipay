@@ -40,7 +40,7 @@ module Omnipay
 
       def request_phase(amount, params={})
         product_name = params[:title] || ''
-        transaction_id = params[:reference] || random_transaction_id
+        transaction_id = params[:transaction_id] || random_transaction_id
         locale = params[:locale] || 'fr'
 
         [
