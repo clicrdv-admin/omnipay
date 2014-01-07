@@ -24,67 +24,122 @@ Or install it yourself as:
 
 ## Get Started
 
-Let's say you want to integrate payments via mangopay for your application.
+Let's say you want to integrate payments via mangopay for your application. The code examples are for a Rails application, but can be easily adapted for any Rack application (Sinatra, Grape, ...)
 
-You will first need to plug an Omnipay MangoPay Gateway in your application
+### Configure a Mangopay gateway
+
+You will first need to setup Omnipay with a secret token in order to securize the payments. You can generate one in an irb console by calling `SecureRandom.hex`.
 
 ```ruby
 # config/initializers/omnipay.rb
+Omnipay.configure do |config|
+  config.secret_token = "my-secret-token"
+end
+```
+
+You then need to specify and configure your payment gateway  :
+
+```ruby
+# config/application.rb
 Rails.application.configure do |config|
 
-  # You will first need to give a secret token to omnipay, here or in an initializer
-  Omnipay.configure do |config|
-    config.secret_token = "my-secret-token"
-  end
-
-  # An omnipay gateway is configured with a hash with the following keys :
-  # * :uid : an unique identifier which will be used
-  #   to generate 2 urls. One for sending the user to the payment
-  #   gateway, and one for the user's return from the gateway.
-  #
-  # * :adapter : the integration of this payment gateway
-  #
-  # * :config : a config hash passed to the adapter
+  # [...]
 
   config.middleware.use Omnipay::Gateway,
-    :uid      => 'sandbox',
+  
+    # The uid is an unique identifier which will be used to generate 2 urls : 
+    # - GET /pay/:uid          -> will redirect the user to the payment gateway
+    # - GET /pay/:uid/callback -> will be visited by the user after its payment is processed
+    :uid      => 'my-payment-gateway',
+    
+    # The payment gateway you wish to map under these urls. 
     :adapter  => Omnipay::Adapters::Mangopay,
+
+    # The gateway configuration (depends on the chosen adapter).
     :config   => {
-      :public_key  => "azerty1234",
-      :private_key => "azerty1234",
-      :wallet_id   => 12345
+      :client_id         => "your-client-id",
+      :client_passphrase => "your-secret-passphrase",
+      :wallet_id         => "the-id-of-the-wallet-to-credit"
     }
   )
 
 end
 ```
 
-This configuration will make your app respond to two urls :
+### Redirect the user to the payment page
 
- * `GET /pay/sandbox?amount=xxxx` will forward your user to mangopay for paying the xxxx amount (in cents)
- * `GET /pay/sandbox/callback` will be called when the payment process is complete. You will need to create a route to handle this request in your application
+The former configuration generated the following URL in your app : `GET /pay/my-payment-gateway`
 
+This url needs to be called with a `:amount` GET parameter, which is the amount in cents the user will be asked to pay.
+
+You can put a link in your application to this url, and test that you are being redirected to a payment page for $10.95 :
+```erb
+<%= link_to '/pay/my-payment-gateway', :amount => (10.95 * 100) %>
+```
+
+
+### Handle the returns from Mangopay
+
+If you try to fill in the payment form, you may notice that you are redirected to your application's 404 page.
+
+This is because, with the abose configuration, mangopay will redirect the users to the following URL : `GET /pay/my-payment-gateway/callback`.
+
+You need to setup a controller action with a route to handle it : 
 
 ```ruby
 # config/routes.rb
-get '/pay/:gateway_id/callback', :to => "payments#callback"
 
-# app/controllers/payments_controller.rb
-def callback
-
-  # In this action you have access to the hash request.env['omnipay.response']
-  # This reponse hash is independant of the chosen gateway and will look like this : 
-  {
-    :amount => 1295 # The amount in cents payed by the user.
-    :success => true # Was the payment successful or not.
-    :error => :invalid_pin # An error code if the payment was not successful.
-    :reference => "O-12XFD-987" # The payment's reference in the gateway platform.
-    :raw => <Hash> # The raw response params from the gateway
-  }
-
-end
+# [...]
+match '/pay/:gateway_id/callback', :to => 'payments#callback', :via => :get
 
 ```
+
+In your callback action, you will have access to the results of the payment in the hash `request.env['omnipay.response']`. This hash contains the following keys :
+
+ - `:success (boolean)` : was the payment successful or not.
+
+If the payment is **successful**, the following values are also present in the hash :
+
+ - `:amount (integer)` : the amount paid, in cents.
+ - `:transaction_id (string)` : the identifier of the transaction on the gateway side. 
+
+If the payment was **not successful**, the following value is present :
+
+ - `:error (symbol)` : the reason why the payment was not successful. Can have one of the following values :
+     - `Omnipay::CANCELED` : the payment was canceled by the user.
+     - `Omnipay::PAYMENT_REFUSED` : the payment was refused on the gateway side.
+     - `Omnipay::INVALID_RESPONSE` : there was an error parsing the response from the gateway.
+     - `Omnipay::WRONG_SIGNATURE` : the response seemed good and successful, but didn't match the former redirection (e.g : the amounts are not matching).
+
+In any case, should you need to investigate further, there is the following value :
+
+ - `:raw (hash)` : the entirety of the parameters send by the gateway in its response
+
+
+You callback action may then look like this :
+
+```ruby
+# app/controllers/payments_controller.rb
+
+def callback
+  omnipay_response = request.env['omnipay.response']
+  
+  if omnipay_response[:success]
+    log_payment(omnipay_response[:amount], omnipay_response[:transaction_id])
+    redirect_to root_path, :notice => "Successful Payment"
+  else
+    if omnipay_response[:error] == Omnipay::CANCELED
+      redirect_to root_path, :notice => "You canceled your payment"
+    else
+      log_error(omnipay_response[:error], omnipay_response[:raw])
+      redirect_to root_path, :error => "There was an error with your payment, our team have been notified."
+    end
+  end
+end
+```
+
+
+## More advanced topics
 
 ## Optional parameters when calling the payment url
 
