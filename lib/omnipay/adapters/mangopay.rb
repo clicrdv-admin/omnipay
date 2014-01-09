@@ -19,7 +19,7 @@ module Omnipay
 
         raise ArgumentError.new("Missing client_id, client_passphrase, or wallet_id parameter") unless [config[:client_id], config[:client_passphrase], config[:wallet_id]].all?
 
-        @client = Client.new(config[:client_id], config[:client_passphrase])
+        @client = Client.new(config[:client_id], config[:client_passphrase], :sandbox => !!config[:sandbox])
         @callback_url = callback_url
         @wallet_id = config[:wallet_id]
 

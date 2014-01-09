@@ -37,7 +37,8 @@ class OmnipaySampleApp < Sinatra::Base
     :config => {
       :client_id => ENV['MANGOPAY_PUBLIC_KEY'],
       :client_passphrase => ENV['MANGOPAY_PRIVATE_KEY'],
-      :wallet_id => ENV['MANGOPAY_WALLET_ID']
+      :wallet_id => ENV['MANGOPAY_WALLET_ID'],
+      :sandbox => true
     }
 
 
