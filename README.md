@@ -28,7 +28,7 @@ Let's say you want to integrate payments via mangopay for your application. The 
 
 ### Configure a Mangopay gateway
 
-You will first need to setup Omnipay with a secret token in order to securize the payments. You can generate one in an irb console by calling `SecureRandom.hex`.
+You will first need to setup Omnipay with a secret token in order to securize the payments. You can generate one in an irb console by calling `SecureRandom.hex` ( `require 'active_support'` ) .
 
 ```ruby
 # config/initializers/omnipay.rb
@@ -41,11 +41,14 @@ You then need to specify and configure your payment gateway  :
 
 ```ruby
 # config/application.rb
+
+require 'omnipay/adapters/mangopay'
+
 Rails.application.configure do |config|
 
   # [...]
 
-  config.middleware.use Omnipay::Gateway,
+  config.middleware.use( Omnipay::Gateway,
   
     # The uid is an unique identifier which will be used to generate 2 urls : 
     # - GET /pay/:uid          -> will redirect the user to the payment gateway
@@ -157,9 +160,7 @@ You may want to have more informations in the callback. For example, if you have
 ```ruby
 
 # app/views/orders/payment.html.erb
-<%= link_to '/pay/sandbox', 
-            :amount => @order.amount, 
-            :context => {:order_id => @order.id} %>
+ <%= link_to 'Pay Now', '/pay/sandbox?' + { :amount => @order.amount, :context =>  { :order_id: @order.id }}.to_query %>
 
 
 # app/controllers/payments_controller.rb
