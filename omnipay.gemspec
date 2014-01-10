@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.authors       = ["ClicRDV"]
   s.email         = ["contact@clicrdv.com"]
   s.homepage      = "https://github.com/clicrdv/omnipay"
-  s.summary       = "TODO: summary"
-  s.description   = "TODO: description"
+  s.summary       = "Payment gateway abstraction for rack applications."
+  s.description   = "Payment gateway abstraction for rack applications.  Think omniauth for off-site payment."
 
   s.files         = `git ls-files app lib`.split("\n")
   s.platform      = Gem::Platform::RUBY
