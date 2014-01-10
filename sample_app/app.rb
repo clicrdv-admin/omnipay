@@ -43,6 +43,7 @@ class OmnipaySampleApp < Sinatra::Base
 
 
   get '/' do
+    @context = {:foo => "bar", :baz => {:boo => "booboo"}}
     erb :home
   end
 
@@ -60,6 +61,7 @@ class OmnipaySampleApp < Sinatra::Base
     if response[:success]
       @amount = response[:amount]
       @reference = response[:transaction_id]
+      @context = response[:context].to_yaml
 
       erb :success
     else

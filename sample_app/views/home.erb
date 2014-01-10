@@ -5,7 +5,7 @@
   <ul class="pricing-table">
     <li class="title">Item 1 (Oneclicpay)</li>
     <li class="price"><%= '%.2f €' % (995.to_f/100) %></li>
-    <li class="cta-button"><a class="button" href="/pay/afone?amount=995&title=Item%201&locale=en">Buy Now</a></li>
+    <li class="cta-button"><a class="button" href="/pay/afone?<%= Rack::Utils.build_nested_query(:amount => "995", :title => "Item 1", :locale => "en", :context => @context) %>">Buy Now</a></li>
   </ul>
 </div>
 
@@ -14,7 +14,7 @@
   <ul class="pricing-table">
     <li class="title">Item 2 (Mangopay)</li>
     <li class="price"><%= '%.2f €' % (1295.to_f/100) %></li>
-    <li class="cta-button"><a class="button" href="/pay/mangopay?amount=1295&title=Item%202&locale=en">Buy Now</a></li>
+    <li class="cta-button"><a class="button" href="/pay/mangopay?<%= Rack::Utils.build_nested_query(:amount => "1295", :context => @context) %>">Buy Now</a></li>
   </ul>
 </div>
 
