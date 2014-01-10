@@ -86,6 +86,23 @@ describe Omnipay::Adapters::Mangopay do
         }.to_json
       )
 
+    end
+
+
+    it "should allow to customize the locale" do
+
+      # User creation
+      expect(adapter.client).to receive(:post).with("/users/natural", {:Email=>"user-1388491766-mpv@host.tld", :FirstName=>"User 1388491766-mpv", :LastName=>"User 1388491766-mpv", :Birthday=>1388491766, :Nationality=>"FR", :CountryOfResidence=>"FR"}) do
+        {"Id" => "USER_ID"}
+      end
+
+      # Payment creation : use the english culture
+      expect(adapter.client).to receive(:post).with("/payins/card/web", {:Culture=>"EN", :AuthorId=>"USER_ID", :DebitedFunds=>{:Currency=>"EUR", :Amount=>1295}, :Fees=>{:Currency=>"EUR", :Amount=>0}, :CreditedWalletId=>"wallet_id", :ReturnURL=>"http://callback.url", :CardType=>"CB_VISA_MASTERCARD", :SecureMode=>"FORCE"}) do
+        {"Id" => "PAYIN_ID", "RedirectURL" => "http://payin.url"}
+      end
+
+
+      adapter.request_phase(amount, :locale => "en")
 
     end
 

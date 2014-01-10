@@ -14,7 +14,7 @@
   <ul class="pricing-table">
     <li class="title">Item 2 (Mangopay)</li>
     <li class="price"><%= '%.2f €' % (1295.to_f/100) %></li>
-    <li class="cta-button"><a class="button" href="/pay/mangopay?<%= Rack::Utils.build_nested_query(:amount => "1295", :context => @context) %>">Buy Now</a></li>
+    <li class="cta-button"><a class="button" href="/pay/mangopay?<%= Rack::Utils.build_nested_query(:amount => "1295", :context => @context, :locale => 'en') %>">Buy Now</a></li>
   </ul>
 </div>
 
