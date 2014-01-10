@@ -126,7 +126,7 @@ describe Omnipay::Adapters::Mangopay do
 
 
     it "should handle a wrong response" do
-      VCR.use_cassette('mangopay_callback_phase') do      
+      VCR.use_cassette('mangopay_callback_phase') do
         adapter.callback_hash(:transactionId => 'wrong-transaction-id').should == {
           :success => false,
           :error => Omnipay::INVALID_RESPONSE

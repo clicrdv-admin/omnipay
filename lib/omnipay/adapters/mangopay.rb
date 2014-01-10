@@ -14,7 +14,6 @@ module Omnipay
 
     class Mangopay
 
-
       def initialize(callback_url, config = {})
 
         raise ArgumentError.new("Missing client_id, client_passphrase, or wallet_id parameter") unless [config[:client_id], config[:client_passphrase], config[:wallet_id]].all?
@@ -28,37 +27,17 @@ module Omnipay
 
       def request_phase(amount, params = {})
 
-        # Create a user
-        user_creation_response = @client.post('/users/natural', user_params)
-        user_id = user_creation_response["Id"]
+        transaction_id, redirect_url = create_web_payin(amount)
 
-        # Create the payment
-        payment_creation_response = @client.post(
-          '/payins/card/web', 
-          :AuthorId => user_id, 
-          :DebitedFunds => {
-            :Currency => 'EUR',
-            :Amount => amount
-          },
-          :Fees => {
-            :Currency => 'EUR',
-            :Amount => 0
-          }, 
-          :CreditedWalletId => @wallet_id,
-          :ReturnURL => @callback_url,
-          :Culture => 'FR',
-          :CardType => 'CB_VISA_MASTERCARD',
-          :SecureMode => 'FORCE'
-        )
-
-        transaction_id = payment_creation_response["Id"]
-        redirect_url = payment_creation_response["RedirectURL"]
+        # Generate the path and query parameters from the returned redirect_url string
         uri = URI(redirect_url)
 
-        url = "#{uri.scheme}://#{uri.host}#{uri.path}"
-        params = Rack::Utils.parse_nested_query(uri.query)
-
-        ['GET', url, params, transaction_id]
+        return [
+          'GET', 
+          "#{uri.scheme}://#{uri.host}#{uri.path}", 
+          Rack::Utils.parse_nested_query(uri.query), 
+          transaction_id
+        ]
 
       end
 
@@ -67,7 +46,14 @@ module Omnipay
 
         transaction_id = params[:transactionId]
 
-        response = @client.get "/payins/#{transaction_id}"
+        begin
+          response = @client.get "/payins/#{transaction_id}"
+        rescue Mangopay::Client::Error => e
+          return {
+            :success => false,
+            :error => Omnipay::INVALID_RESPONSE
+          }
+        end
 
         # Check if the response is valid
         if response['code'] != 200
@@ -105,11 +91,11 @@ module Omnipay
 
       private
 
+      def create_web_payin(amount)
 
-      def user_params
+        # Create a user
         random_key = "#{Time.now.to_i}-#{(0...3).map { ('a'..'z').to_a[rand(26)] }.join}"
-
-        {
+        user_params = {
           :Email => "user-#{random_key}@host.tld",
           :FirstName => "User #{random_key}",
           :LastName => "User #{random_key}",
@@ -117,6 +103,31 @@ module Omnipay
           :Nationality => "FR",
           :CountryOfResidence => "FR"
         }
+
+        user_id = (@client.post('/users/natural', user_params))["Id"]
+
+        # Create the web payin        
+        payin_params = {
+          :AuthorId => user_id, 
+          :DebitedFunds => {
+            :Currency => 'EUR',
+            :Amount => amount
+          },
+          :Fees => {
+            :Currency => 'EUR',
+            :Amount => 0
+          },
+          :CreditedWalletId => @wallet_id,
+          :ReturnURL => @callback_url,
+          :Culture => 'FR',
+          :CardType => 'CB_VISA_MASTERCARD',
+          :SecureMode => 'FORCE'
+        }
+
+        payin = @client.post '/payins/card/web', payin_params
+
+        # Return the transaction reference, and the full redirection url
+        return [payin["Id"], payin["RedirectURL"]]
       end
 
     end

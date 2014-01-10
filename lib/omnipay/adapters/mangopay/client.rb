@@ -8,6 +8,8 @@ module Omnipay
 
       class Client
 
+        class Error < ::StandardError ; end
+
         include HTTParty
 
         format :json
@@ -31,7 +33,9 @@ module Omnipay
             :basic_auth => {:username => @key, :password => @secret}, 
             :base_uri => @base_uri
 
-          response.parsed_response.merge("code" => response.code)          
+          check_errors(response)
+
+          response.parsed_response.merge("code" => response.code)
         end
 
         def post(path, params = {})
@@ -40,7 +44,23 @@ module Omnipay
             :basic_auth => {:username => @key, :password => @secret},
             :base_uri => @base_uri
 
+          check_errors(response)
+
           response.parsed_response.merge("code" => response.code)
+        end
+
+
+        private
+
+        def check_errors(response)
+          # nocommit, log the request :/
+          if response.code != 200
+            error_message = response.parsed_response.merge(
+              "code" => response.code
+            )
+
+            raise Error, error_message.inspect
+          end
         end
 
       end
