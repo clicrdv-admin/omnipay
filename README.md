@@ -212,110 +212,9 @@ config.middleware.use Omnipay::Gateway do |uid|
 ```
 
 
-## Implement a new adapter
+## Add a new adapter
+[Article on the wiki](https://github.com/clicrdv/omnipay/wiki/Implement-a-new-adapter)
 
-An omnipay gateway adapter is a class which must implement the following interface :
-
-```ruby
-class Omnipay::Adapters::MyAdapter
-
-  # The config argument will be populated with the :config value defined in the initializer
-  # It is up to you to decide which fields are mandatory, and to validate their presence
-  def initialize(callback_url, config = {})
-
-    @callback_url = callback_url
-
-    unless config[:client_id] && config[:client_secret]
-      raise ArgumentError.new("missing client_id or client_secret")
-    end
-
-    @auth_token = compute_auth_token(client_id, client_secret)
-    
-  end
-
-
-  # Request phase : defines the redirection to the payment gateway
-  #
-  # Inputs 
-  # * amount (integer) : the amount in cents to pay
-  # * params (Hash) : optional parameters for this payment (transaction_id, title, locale, ...)
-  #
-  # Outputs: array with 4 elements :
-  # * the HTTP method to use ('GET' or 'POST')
-  # * the url to call
-  # * the parameters (will be in the url if GET, or as x-www-form-urlencoded in the body if POST)
-  # * a unique id referencing the transaction. Has to be accessible in the callback phase.
-
-  def request_phase(amount, params = {})
-
-    transaction_id = params[:transaction_id] || generate_unique_id()
-
-    [
-      'POST'
-      'https://payment.url',
-      {
-        :amount => amount,
-        :transactionId => transaction_id,
-        :callbackUrl => @callback_url,
-        :token => @auth_token
-      },
-      transaction_id
-    ]
-    
-  end
-
-
-  # Callback hash : extracts the response hash which will be accessible in the callback action
-  #
-  # Inputs
-  # * gateway_callback_params (Hash) : the GET/POST parameters returned by the payment gateway
-  #
-  # Outputs : a Hash which must contain the following keys :
-  # * success (boolean) : was the payment successful or not
-  # * amount (integer) : the amount actually paid, in cents, if successful
-  # * transaction_id(string) : the unique id generated in the request phase, if successful
-  # * error (symbol) : the error code if the payment was not successful
-  # * error_message (optional string) : a more detailed message explaining the
-  
-  def callback_hash(gateway_callback_params)
-
-    transaction_id = gateway_callback_params[:ref]
-    transaction = get_transaction_from_api(transaction_id)
-    
-    if transaction == nil
-      return {
-        :success => false,
-        :error => Omnipay::INVALID_RESPONSE
-      }
-    end
-    
-    if transaction.successful?
-      {
-        :success => true,
-        :amount => transaction.amount.to_i,
-        :transaction_id => transaction_id
-      }
-    elsif transaction.canceled?
-      {
-        :success => false,
-        :error => Omnipay::CANCELED
-      }
-    elsif transaction.failed?
-      {
-        :success => false,
-        :error => Omnipay::PAYMENT_REFUSED
-      }
-    else
-      {
-        :success => false,
-        :error => Omnipay::INVALID_RESPONSE
-      }      
-    end
-
-  end
-
-end
-```
 
 ## Contributing
 
@@ -325,14 +224,3 @@ end
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
 
-### Update the gem
-
-Install the `gem-release` gem 
-
-[documentation](http://github.com/svenfuchs/gem-release)
-
-`gem bump`
-
-`gem tag`
-
-`gem release`
