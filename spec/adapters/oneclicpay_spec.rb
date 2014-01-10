@@ -127,7 +127,7 @@ describe Omnipay::Adapters::Oneclicpay do
         :transactionId => '1388504385-VAD-495-130-fgj'
       }
 
-      adapter.callback_hash(refused_payment_response_params).should == {:success => false, :error => Omnipay::PAYMENT_REFUSED}
+      adapter.callback_hash(refused_payment_response_params).should == {:success => false, :error => Omnipay::PAYMENT_REFUSED, :error_message => 'Monnaie invalide'}
 
     end
 
@@ -140,7 +140,7 @@ describe Omnipay::Adapters::Oneclicpay do
       }
 
       VCR.use_cassette('wrong_validation', :record => :new_episodes) do
-        adapter.callback_hash(good_response_params).should == {:success => false, :error => Omnipay::INVALID_RESPONSE}
+        adapter.callback_hash(good_response_params).should == {:success => false, :error => Omnipay::INVALID_RESPONSE, :error_message => 'Could not fetch the amount of the transaction 1388504385-VAD-495-130-fgj'}
       end
 
     end

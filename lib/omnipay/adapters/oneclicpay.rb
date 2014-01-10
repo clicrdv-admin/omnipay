@@ -68,15 +68,15 @@ module Omnipay
           if amount
             { :success => true, :amount => amount, :transaction_id => transaction_id }
           else
-            { :success => false, :error => Omnipay::INVALID_RESPONSE }
+            { :success => false, :error => Omnipay::INVALID_RESPONSE, :error_message => "Could not fetch the amount of the transaction #{transaction_id}" }
           end
 
 
         elsif params[:result] == "NOK"
-          { :success => false, :error => Omnipay::PAYMENT_REFUSED }
+          { :success => false, :error => Omnipay::PAYMENT_REFUSED, :error_message => params[:reason] }
 
         else
-          { :success => false, :error => Omnipay::INVALID_RESPONSE }
+          { :success => false, :error => Omnipay::INVALID_RESPONSE, :error_message => "No :result key in the params #{params.inspect}" }
         end
       end
 

@@ -128,13 +128,15 @@ If the payment is **successful**, the following values are also present in the h
  - `:amount (integer)` : the amount paid, in cents.
  - `:transaction_id (string)` : the identifier of the transaction on the gateway side. 
 
-If the payment was **not successful**, the following value is present :
+If the payment was **not successful**, the following values are present :
 
  - `:error (symbol)` : the reason why the payment was not successful. Can have one of the following values :
      - `Omnipay::CANCELED` : the payment was canceled by the user.
      - `Omnipay::PAYMENT_REFUSED` : the payment was refused on the gateway side.
      - `Omnipay::INVALID_RESPONSE` : there was an error parsing the response from the gateway.
      - `Omnipay::WRONG_SIGNATURE` : the response seemed good and successful, but didn't match the former redirection (e.g : the amounts are not matching).
+ - `:error_message (string)` : a more detailed trace of the context of the error
+
 
 In any case, should you need to investigate further, there is the following value :
 
@@ -273,6 +275,7 @@ class Omnipay::Adapters::MyAdapter
   # * amount (integer) : the amount actually paid, in cents, if successful
   # * transaction_id(string) : the unique id generated in the request phase, if successful
   # * error (symbol) : the error code if the payment was not successful
+  # * error_message (optional string) : a more detailed message explaining the
   
   def callback_hash(gateway_callback_params)
 

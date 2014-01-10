@@ -51,7 +51,8 @@ module Omnipay
         rescue Mangopay::Client::Error => e
           return {
             :success => false,
-            :error => Omnipay::INVALID_RESPONSE
+            :error => Omnipay::INVALID_RESPONSE,
+            :error_message => "Could not fetch details of transaction #{transaction_id}"
           }
         end
 
@@ -82,7 +83,8 @@ module Omnipay
           else
             {
               :success => false,
-              :error => Omnipay::PAYMENT_REFUSED
+              :error => Omnipay::PAYMENT_REFUSED,
+              :error_message => "Refused payment for transaction #{transaction_id}.\nCode : #{response['ResultCode']}\nMessage : #{response['ResultMessage']}"
             }
           end
         end

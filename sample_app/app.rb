@@ -66,21 +66,21 @@ class OmnipaySampleApp < Sinatra::Base
       case response[:error]
       when Omnipay::CANCELATION
 
-        @error = "La transaction a été annulée"
+        @error = "La transaction a été annulée : <pre>#{response[:error_message]}</pre>"
 
       when Omnipay::INVALID_RESPONSE
 
-        @error = "Erreur lors du traitement de la réponse"
+        @error = "Erreur lors du traitement de la réponse : \n#{response[:error_message]}"
         @details = response[:raw].to_yaml
 
       when Omnipay::PAYMENT_REFUSED
 
-        @error = "Le paiement a été refusé"
+        @error = "Le paiement a été refusé : \n#{response[:error_message]}"
         @details = response[:raw]["reason"]
 
       when Omnipay::WRONG_SIGNATURE
 
-        @error = "La réponse ne correspond pas au paiement qui était demandé"
+        @error = "La réponse ne correspond pas au paiement qui était demandé : \n#{response[:error_message]}"
         @details = response[:raw].merge(:session => session).to_yaml
 
       end

@@ -19,7 +19,20 @@ module Omnipay
 
       # Check the signature
       if callback_hash[:success] && !valid_signature?(callback_hash)
-        callback_hash = {:success => false, :error => Omnipay::WRONG_SIGNATURE}
+        callback_hash = {
+          :success => false, 
+          :error => Omnipay::WRONG_SIGNATURE, 
+          :error_message => "Signatures do not match."
+        }
+      end
+
+      # If not successful response, add informations to the error message
+      if !callback_hash[:success]
+        callback_hash[:error_message] = (callback_hash[:error_message] || callback_hash[:error].to_s) +
+          "\nAdapter : #{@adapter.uid}" +
+          "\nContext : #{context.inspect}" +
+          "\nStored signature : #{stored_signature}" +
+          "\nRequest : #{@request.inspect}"
       end
 
       # Store the response in the environment
@@ -33,10 +46,17 @@ module Omnipay
     private
 
     def valid_signature?(callback_hash)
-      stored_signature = @request.session['omnipay.signature'] && @request.session['omnipay.signature'][@adapter.uid]
       callback_signature = Signer.new(callback_hash[:transaction_id], callback_hash[:amount], context).signature
 
       callback_signature == stored_signature
+    end
+
+    def stored_signature
+      @stored_signature ||= @request.session['omnipay.signature'] && @request.session['omnipay.signature'].delete(@adapter.uid)
+    end
+
+    def callback_signature
+      @callback_signatureSigner.new(callback_hash[:transaction_id], callback_hash[:amount], context).signature
     end
 
     def context
