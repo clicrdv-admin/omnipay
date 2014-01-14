@@ -74,10 +74,10 @@ describe Omnipay::Gateway do
       it 'should intercept requests matching the gateway\'s request path' do
 
         # It should defer to the gateway for the request path
-        GatewayAdapter
-          .any_instance
-          .should_receive(:request_phase)
-          .with(1295, {})
+        GatewayAdapter                    \
+          .any_instance                   \
+          .should_receive(:request_phase) \
+          .with(1295, {})                 \
           .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
@@ -98,10 +98,10 @@ describe Omnipay::Gateway do
 
       it 'should respond with an autosubmitted html form for POST requests' do
 
-        GatewayAdapter
-          .any_instance
-          .should_receive(:request_phase)
-          .with(1295, {})
+        GatewayAdapter                    \
+          .any_instance                   \
+          .should_receive(:request_phase) \
+          .with(1295, {})                 \
           .and_return(['POST', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295'
@@ -115,10 +115,10 @@ describe Omnipay::Gateway do
 
       it "should send the GET params in the request phase" do
 
-        GatewayAdapter
-          .any_instance
-          .should_receive(:request_phase)
-          .with(1295, {:foo => 'bar'})
+        GatewayAdapter                    \
+          .any_instance                   \
+          .should_receive(:request_phase) \
+          .with(1295, {:foo => 'bar'})    \
           .and_return(['GET', 'http://host.tld', {:amount => 1295, :signature => "25abb63df816dc57"}])
 
         browser.get '/pay/my_gateway?amount=1295&foo=bar'
@@ -154,22 +154,22 @@ describe Omnipay::Gateway do
       it 'should intercept requests matching the gateway\'s callback path' do
 
         # Simulate a working gateway implementation
-        GatewayAdapter
-          .any_instance
-          .stub(:request_phase)
-          .with(1295, {})
+        GatewayAdapter          \
+          .any_instance         \
+          .stub(:request_phase) \
+          .with(1295, {})       \
           .and_return([
             'GET',
             'my_url',
             {},
             'REF-123'
-          ])
-          .stub(:callback_hash)
+          ])                    \
+          .stub(:callback_hash) \
           .with({
             :amount => "1295",
             :ref => "REF-123",
             :sig => "MTI5NQ"
-          })
+          })                    \
           .and_return({
             :success => true,
             :amount => 1295,

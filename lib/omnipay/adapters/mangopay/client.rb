@@ -1,6 +1,7 @@
 # Client for the mangopay API
 
 require 'httparty'
+require 'json'
 
 module Omnipay
   module Adapters

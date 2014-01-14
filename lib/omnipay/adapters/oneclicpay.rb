@@ -112,7 +112,11 @@ module Omnipay
       end
 
       def get_transaction_amount(transaction_id)
-        response = HTTParty.post("#{validation_url}/rest/payment/find?serialNumber=#{@tpe_id}&key=#{@secret_key}&transactionRef=#{transaction_id}")
+        response = HTTParty.post(
+          "#{validation_url}/rest/payment/find?serialNumber=#{@tpe_id}&key=#{@secret_key}&transactionRef=#{transaction_id}",
+          :headers => {'content-type' => "application/x-www-form-urlencoded"} # For ruby 1.8.7
+        )
+        
         (response.parsed_response["transaction"][0]["ok"] != 0) && response.parsed_response["transaction"][0]["amount"]
       end
 
