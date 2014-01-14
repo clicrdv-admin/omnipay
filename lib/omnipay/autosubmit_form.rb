@@ -6,18 +6,16 @@ module Omnipay
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="text/javascript">
-      window.onload=function(){
-        document.getElementById('autosubmit-form').submit();
-      }
-    </script>
+    <title>You are being redirected</title>
   </head>
-
   <body>
     <h1>Redirecting...</h1>
     HEADER
 
     FOOTER = <<-FOOTER
+    <script type="text/javascript">
+      document.getElementById('autosubmit-form').submit();
+    </script>
   </body>
 </html>
 FOOTER
