@@ -1,13 +1,18 @@
-# Class responsible for formatting the redirection in the request phase
-
 module Omnipay
+
+  # Class responsible for formatting the redirection in the request phase
   class RequestPhase
 
+    # @param request [Rack::Request] The request corresponding to the redirection from the payment gateway to the application.
+    # @param adapter [Adapter] The adapter instance of the gateway having catched this request
+    # @return [RequestPhase]
     def initialize(request, adapter)
       @request = request
       @adapter = adapter
     end
 
+    # Returns the rack response for redirecting the user to the payment page. Can be a 302 redirect if a GET redirection, or an AutosubmittedForm for POST redirections
+    # @return [Rack::Response]
     def response
       method, url, params, transaction_id = @adapter.request_phase(amount, adapter_params)
 

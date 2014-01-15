@@ -1,14 +1,19 @@
-# Class responsible for updating the request env in the callback phase
-
 module Omnipay
+
+  # Class responsible for the processing in a gateway's callback phase. It updates the request's environemnt with the formatted Omnipay response given by the apdater's implementation.
   class CallbackPhase
 
+    # @param request [Rack::Request] The request corresponding to the redirection from the payment gateway to the application.
+    # @param adapter [Adapter] The adapter instance of the gateway having catched this request
+    # @return [CallbackPhase]
     def initialize(request, adapter)
       @request = request
       @adapter = adapter
     end
 
 
+    # Actually set the request's environment variable 'omnipay.response' with the formatted summary of the payment transaction.
+    # @note Should only be called once because of the signatures lifetime
     def update_env!
 
       # The request params, keys symbolized

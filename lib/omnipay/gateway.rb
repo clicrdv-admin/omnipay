@@ -2,10 +2,26 @@ require 'rack'
 
 module Omnipay
 
-  # Gateway middleware
+  # This is the actual Rack middleware
+  # 
+  # It is associated with an adapter instance, and 
+  # responsible for monitoring the incoming request
+  # and - depending on their path - forwarding them
+  # for processing to a RequestPhase or CallbackPhase
+  # instance for processing
   class Gateway
 
     BASE_PATH = '/pay'
+
+    # @param app [Rack application] : The rack app it should forward to if the request doens't match a monitored path
+    # 
+    # @param options [Hash] : must contains the following configuration options
+    #  * :uid : the subpath to monitor
+    #  * :adapter : the adapter class to use 
+    #  * :config : the config hash which will be passed at the adapter for initialization
+    # 
+    # The gateway may be initialized with a block returning a hash instead of a hash. In this case, the
+    # block's only argument is the uid, and the returned hash must contain the adapter class and its configuration
 
     def initialize(app, options={}, &block)
       @app = app
@@ -18,7 +34,8 @@ module Omnipay
       @request = nil
     end
 
-
+    # The standard rack middleware call. Will be processed by an instance of RequestPhase or CallbackPhase if the
+    # path matches the adapter's uid. Will forward to the app otherwise
     def call(env)
 
       # Get the current request
