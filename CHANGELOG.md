@@ -1,4 +1,4 @@
-# 0.0.2
+# Edge
 
 ## Bug Fixes
 * POST redirections now are compatible with turbolinks
