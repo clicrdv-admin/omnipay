@@ -1,6 +1,11 @@
 # Edge
 
 
+# 0.0.4
+
+Lowered rack dependency : 1.5 to 1.4.5+
+
+
 # 0.0.3
 
 Ruby 1.8.7 compatibility
