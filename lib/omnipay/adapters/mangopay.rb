@@ -6,8 +6,7 @@
 # - client_passphrase:string (mandatory) : the passphrase for your account
 # - wallet_id:string (mandatory) : the wallet to be credited with the payments
 
-require_relative 'mangopay/client'
-
+require 'omnipay/adapters/mangopay/client'
 
 module Omnipay
   module Adapters

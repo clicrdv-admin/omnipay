@@ -17,8 +17,12 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.rubyforge_project = '[none]'
 
-  s.add_dependency 'rack'
+  s.add_dependency 'rack', '~> 1.5'
+
+  if RUBY_VERSION < '1.9'
+    s.add_dependency 'json', '~> 1.8'
+  end
 
   # For adapters implementations
-  s.add_dependency 'httparty', '< 1.0'
+  s.add_dependency 'httparty', '~> 0.11.0' # 0.12 drops support for ruby 1.8.7
 end

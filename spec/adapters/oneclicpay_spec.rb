@@ -63,7 +63,7 @@ describe Omnipay::Adapters::Oneclicpay do
           :nom_produit => "",
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
-          :sec => "d39155c351027f2110a5757097e4434e362bf2a584685e200f274adc6e7f3e70d9eeaf520c4ccb88b443dba18a1b211c40890882477945e983204010fae1b6d0"          
+          :sec => "df899958eb68aa5bdc709a708f73614c116f54f7ad1bf818e31a416d896374da43a903e850a70decbc4d548fab1bbaff2576d8c76e3f7c70f02eca95eff1115e"          
         },
         '1388491766-tpe_id-mpv'
       ]
@@ -89,7 +89,7 @@ describe Omnipay::Adapters::Oneclicpay do
           :nom_produit => "title",
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
-          :sec => "13c067d6e2cf48804336e0f2d6591fe28f1710c7f1baaa9a43fa8383976ff7fca14a6ec2ac2455681d372edaf8b35353b996e7008dce0f28c6eb6ee530a65f69"          
+          :sec => "8269d3c7c901628594499283a855c5c37b8ebc05b741e4818dc439ceb7ee30493bdabe993b7425ea327828f71c4e3d9d8e8574683d7a7a872392f93d9df56731"          
         },
         'reference'
       ]
