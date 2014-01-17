@@ -107,7 +107,9 @@ module Omnipay
       end
 
       def signature(params)
-        to_sign = (params.values + [@secret_key]).join('|')
+        # Params values sorted by key name
+        values = params.sort_by{|k,v|k.to_s}.map(&:last)
+        to_sign = (values + [@secret_key]).join('|')
         Digest::SHA512.hexdigest(Base64.encode64(to_sign).gsub(/\n/, ''))
       end
 
