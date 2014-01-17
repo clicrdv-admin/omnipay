@@ -1,3 +1,11 @@
+# Edge
+
+
+# 0.0.3
+
+Ruby 1.8.7 compatibility
+
+
 # 0.0.2
 
 Source code documentation improved
