@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.rubyforge_project = '[none]'
 
-  s.add_dependency 'rack', '~> 1.5'
+  s.add_dependency 'rack', '>= 1.4.5'
 
   if RUBY_VERSION < '1.9'
     s.add_dependency 'json', '~> 1.8'

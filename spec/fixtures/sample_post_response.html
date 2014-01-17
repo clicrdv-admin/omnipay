@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="text/javascript">
-      window.onload=function(){
-        document.getElementById('autosubmit-form').submit();
-      }
-    </script>
+    <title>You are being redirected</title>
   </head>
-
   <body>
     <h1>Redirecting...</h1>
     <form method="POST" id="autosubmit-form" action="http://host.tld">
       <input type="hidden" name="amount" value="1295"/>
       <input type="hidden" name="signature" value="25abb63df816dc57"/>
     </form>
+    <script type="text/javascript">
+      document.getElementById('autosubmit-form').submit();
+    </script>
   </body>
 </html>
