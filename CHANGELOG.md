@@ -1,4 +1,4 @@
-# Edge
+# 0.1.0
 
 * The request phase is done in the controller instead of via a url
 * The host must be given as an argument to the request phase
