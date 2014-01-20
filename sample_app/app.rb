@@ -17,21 +17,10 @@ class OmnipaySampleApp < Sinatra::Base
                              :secret => 'my_session_secret'
   
   Omnipay.configure do |config|
-    config.secret_token = "7f394e59be2bac6222eff91232d15dbc"
+    # config.base_path = '/my/base/callback/path'
   end
 
-  use Omnipay::Gateway, 
-    :uid => "afone",
-    :adapter => Omnipay::Adapters::Oneclicpay,
-    :config => {
-      :tpe_id => ENV['AFONE_PUBLIC_KEY'],
-      :secret_key => ENV['AFONE_PRIVATE_KEY'],
-      :sandbox => true
-    }
-
-
-
-  use Omnipay::Gateway, 
+  Omnipay.use_gateway(
     :uid => "mangopay",
     :adapter => Omnipay::Adapters::Mangopay,
     :config => {
@@ -40,18 +29,54 @@ class OmnipaySampleApp < Sinatra::Base
       :wallet_id => ENV['MANGOPAY_WALLET_ID'],
       :sandbox => true
     }
+  )
 
+  Omnipay.use_gateway( 
+    :uid => "afone",
+    :adapter => Omnipay::Adapters::Oneclicpay,
+    :config => {
+      :tpe_id => ENV['AFONE_PUBLIC_KEY'],
+      :secret_key => ENV['AFONE_PRIVATE_KEY'],
+      :sandbox => true
+    }
+  )
+
+
+  use Omnipay::Middleware
+
+  ITEMS = {
+    'item1' => {
+      :title => 'Item 1 (Oneclicpay)',
+      :price => 995,
+      :gateway => 'afone'
+    },
+
+    'item2' => {
+      :title => 'Item 1 (Mangopay)',
+      :price => 1295,
+      :gateway => 'mangopay'
+    }
+  }
 
   get '/' do
     @context = {:foo => "bar", :baz => {:boo => "booboo"}}
     erb :home
   end
 
+  get '/pay/:item_id' do
+    item = ITEMS[params[:item_id]]
+
+    redirection = Omnipay.gateways.find(item[:gateway]).payment_redirection(:host => 'localhost:9393', :amount => item[:price])
+    return redirection.to_a
+
+    # In Rails, we could have used redirect_to_payment(:amount => item[:price]) and return
+  end
+
 
   # Custom price
   post '/custom-price' do
     amount = (params[:price].to_f * 100).to_i
-    redirect to("/pay/afone?amount=#{amount}")
+    Omnipay.gateways.find('afone').payment_redirection(:host => 'localhost:9393', :amount => amount).to_a
   end
 
   # Payment callback handling
@@ -61,7 +86,6 @@ class OmnipaySampleApp < Sinatra::Base
     if response[:success]
       @amount = response[:amount]
       @reference = response[:transaction_id]
-      @context = response[:context].to_yaml
 
       erb :success
     else
@@ -79,11 +103,6 @@ class OmnipaySampleApp < Sinatra::Base
 
         @error = "Le paiement a été refusé : \n#{response[:error_message]}"
         @details = response[:raw]["reason"]
-
-      when Omnipay::WRONG_SIGNATURE
-
-        @error = "La réponse ne correspond pas au paiement qui était demandé : \n#{response[:error_message]}"
-        @details = response[:raw].merge(:session => session).to_yaml
 
       end
 

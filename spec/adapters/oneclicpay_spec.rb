@@ -10,7 +10,7 @@ describe Omnipay::Adapters::Oneclicpay do
   let(:secret_key){"secret_key"}
   let(:amount){1295}
 
-  let(:adapter){Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)}
+  let(:adapter){Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)}
 
   describe "#initialize" do
 
@@ -18,17 +18,17 @@ describe Omnipay::Adapters::Oneclicpay do
 
       error_message = 'Missing tpe_id or secret_key parameter'
 
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, {}) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :secret_key => secret_key) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key) }.not_to raise_error
+      expect { Omnipay::Adapters::Oneclicpay.new({}) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:secret_key => secret_key) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key) }.not_to raise_error
 
     end
 
     it "should have a sandbox mode" do
 
-      production_adapter = Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key)
-      sandbox_adapter = Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)
+      production_adapter = Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key)
+      sandbox_adapter = Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)
 
       # Check the endpoints
       production_adapter.send(:redirect_url).should == "https://secure.oneclicpay.com"
@@ -51,7 +51,7 @@ describe Omnipay::Adapters::Oneclicpay do
 
 
     it "should build a valid request" do
-      adapter.request_phase(amount).should == [
+      adapter.request_phase(amount, callback_url).should == [
         'POST',
         'https://secure.homologation.oneclicpay.com',
         {
@@ -74,7 +74,8 @@ describe Omnipay::Adapters::Oneclicpay do
       title = "title"
       locale = "en"
 
-      adapter.request_phase(amount, 
+      adapter.request_phase(amount,
+                            callback_url,
                             :transaction_id => reference, 
                             :title => title, 
                             :locale => locale).should == [
@@ -96,8 +97,8 @@ describe Omnipay::Adapters::Oneclicpay do
     end
 
     it "should generate a random transaction id if none specified" do
-      transaction_id_1 = adapter.request_phase(amount)[2][:idTransaction]
-      transaction_id_2 = adapter.request_phase(amount)[2][:idTransaction]
+      transaction_id_1 = adapter.request_phase(amount, callback_url)[2][:idTransaction]
+      transaction_id_2 = adapter.request_phase(amount, callback_url)[2][:idTransaction]
 
       transaction_id_1.should_not == transaction_id_2
     end

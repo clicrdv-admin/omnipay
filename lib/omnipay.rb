@@ -1,14 +1,11 @@
-require 'singleton'
-
 # The root Omnipay module. Used for defining its global configuration
 module Omnipay
 
   autoload :Gateway, 'omnipay/gateway'
-  autoload :Adapter, 'omnipay/adapter'
-  autoload :RequestPhase, 'omnipay/request_phase'
-  autoload :CallbackPhase, 'omnipay/callback_phase'
   autoload :AutosubmitForm, 'omnipay/autosubmit_form'
-  autoload :Signer, 'omnipay/signer'
+  autoload :Configuration, 'omnipay/configuration'
+  autoload :Gateways, 'omnipay/gateways'
+  autoload :Middleware, 'omnipay/middleware'
 
   # Error code for an untreatable response
   INVALID_RESPONSE = :invalid_response
@@ -23,11 +20,18 @@ module Omnipay
   WRONG_SIGNATURE = :wrong_signature
 
 
-  # The global Omnipay configuration singleton
-  class Configuration
-    include Singleton
-    attr_accessor :secret_token
+
+  # Accessors to the configured gateways
+  def self.gateways
+    @gateways ||= Omnipay::Gateways.new
   end
+
+
+  # Syntaxic sugar for adding a new gateway
+  def self.use_gateway(opts = {}, &block)
+    self.gateways.push(opts, &block)
+  end
+
 
   # Accessor to the global configuration
   # @return [Configuration]
@@ -47,3 +51,6 @@ module Omnipay
   end
 
 end
+
+# Rails bindings
+require 'omnipay/railtie' if defined?(Rails)
