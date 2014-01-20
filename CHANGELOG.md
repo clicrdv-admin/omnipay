@@ -1,5 +1,16 @@
 # Edge
 
+* The request phase is done in the controller instead of via a url
+* The host must be given as an argument to the request phase
+* The adapter's signatures changed :
+  * `#initialize : (callback_url, params) => (params)`
+  * `#request_phase : (amount, params) => (amount, callback_url, params)`
+
+* The middleware configuration changed. There is now only one middleware `Omnipay::Middleware`
+* The gateways configuration changed. They are now defined via `Omnipay::use_gateway` The arguments didnt't change
+* The Omnipay `secret_token` configuration was removed
+* The Omnipay `base_path` configuration was added. It defaults to '/pay' and allows to customize the base path for the callback urls.
+
 
 # 0.0.4
 

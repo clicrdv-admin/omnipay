@@ -27,9 +27,7 @@ module Omnipay
         :production => 'https://secure.oneclicpay.com:60000'
       }
 
-      def initialize(callback_url, config)
-        @callback_url = callback_url
-
+      def initialize(config = {})
         @tpe_id = config[:tpe_id]
         @secret_key = config[:secret_key]
         @is_sandbox = config[:sandbox]
@@ -38,7 +36,7 @@ module Omnipay
       end
 
 
-      def request_phase(amount, params={})
+      def request_phase(amount, callback_url, params={})
         product_name = params[:title] || ''
         transaction_id = params[:transaction_id] || random_transaction_id
         locale = params[:locale] || 'fr'
@@ -46,7 +44,7 @@ module Omnipay
         [
           HTTP_METHOD,
           redirect_url,
-          redirect_params_for(amount, product_name, transaction_id, locale),
+          redirect_params_for(amount, product_name, transaction_id, locale, callback_url),
           transaction_id
         ]
       end
@@ -83,7 +81,7 @@ module Omnipay
 
       private
 
-      def redirect_params_for(amount, product_name, transaction_id, locale)
+      def redirect_params_for(amount, product_name, transaction_id, locale, callback_url)
         {
           :montant => (amount.to_f/100).to_s,
           :idTPE => @tpe_id,
@@ -91,8 +89,8 @@ module Omnipay
           :devise => 'EUR',
           :lang => locale,
           :nom_produit => product_name,
-          :urlRetourOK => @callback_url,
-          :urlRetourNOK => @callback_url
+          :urlRetourOK => callback_url,
+          :urlRetourNOK => callback_url
         }.tap{|params|
           params[:sec] = signature(params)
         }
@@ -107,9 +105,7 @@ module Omnipay
       end
 
       def signature(params)
-        # Params values sorted by key name
-        values = params.sort_by{|k,v|k.to_s}.map(&:last)
-        to_sign = (values + [@secret_key]).join('|')
+        to_sign = (params.values + [@secret_key]).join('|')
         Digest::SHA512.hexdigest(Base64.encode64(to_sign).gsub(/\n/, ''))
       end
 

@@ -30,58 +30,64 @@ Let's say you want to integrate payments via mangopay for your application. The 
 
 You will first need to setup Omnipay with a secret token in order to securize the payments. You can generate one in an irb console by calling `SecureRandom.hex` ( `require 'active_support'` ) .
 
+You will also need to setup its payment gateways
+
 ```ruby
 # config/initializers/omnipay.rb
-Omnipay.configure do |config|
-  config.secret_token = "my-secret-token"
-end
+
+require 'omnipay/adapters/mangopay'
+
+Omnipay.use_gateway( 
+  # The uid is an unique identifier which will be used to generate the callback url : 
+  # - GET /pay/:uid/callback -> will be visited by the user after its payment is processed
+  :uid      => 'my-payment-gateway',
+  
+  # The payment gateway you wish to map under this urls. 
+  :adapter  => Omnipay::Adapters::Mangopay,
+
+  # The gateway configuration (depends on the chosen adapter).
+  :config   => {
+    :client_id         => "your-client-id",
+    :client_passphrase => "your-secret-passphrase",
+    :wallet_id         => "the-id-of-the-wallet-to-credit"
+  }
+)
 ```
 
-You then need to specify and configure your payment gateway  :
+You then need to add the middleware which will process the callback responses :
 
 ```ruby
 # config/application.rb
-
-require 'omnipay/adapters/mangopay'
 
 Rails.application.configure do |config|
 
   # [...]
 
-  config.middleware.use( Omnipay::Gateway,
-  
-    # The uid is an unique identifier which will be used to generate 2 urls : 
-    # - GET /pay/:uid          -> will redirect the user to the payment gateway
-    # - GET /pay/:uid/callback -> will be visited by the user after its payment is processed
-    :uid      => 'my-payment-gateway',
-    
-    # The payment gateway you wish to map under these urls. 
-    :adapter  => Omnipay::Adapters::Mangopay,
-
-    # The gateway configuration (depends on the chosen adapter).
-    :config   => {
-      :client_id         => "your-client-id",
-      :client_passphrase => "your-secret-passphrase",
-      :wallet_id         => "the-id-of-the-wallet-to-credit"
-    }
-  )
+  config.middleware.use Omnipay::Middleware
 
 end
 ```
 
 ### Redirect the user to the payment page
 
-The former configuration generated the following URL in your app : `GET /pay/my-payment-gateway`
+A redirection can be called in a controller to the payment page. The mandatory argument is the amount in cents to pay.
 
-This url needs to be called with a `:amount` GET parameter, which is the amount in cents the user will be asked to pay.
+```ruby
+# app/controllers/orders_controller.rb
+def pay
+  total_with_taxes = current_order.total_with_taxes
+  session[:current_order] = @order.id
+  redirect_to_payment 'my-payment-gateway', :amount => (total_with_taxes*100) and return
+end
+```
 
-You can put a link in your application to this url, and test that you are being redirected to a payment page for $10.95 :
-```erb
-<%= link_to '/pay/my-payment-gateway', :amount => (10.95 * 100) %>
+If you are not using rails, you can get the raw Rack::Response to return for the redirection to occur :
+```ruby
+Omnipay.gateways.find('my-payment-gateway').payment_redirection(:host => 'http://your.host.tld', :amount => amount)
 ```
 
 
-### Handle the returns from Mangopay
+### Handle the returns from the payment gateway
 
 If you try to fill in the payment form, you may notice that you are redirected to your application's 404 page.
 
@@ -107,6 +113,7 @@ def callback
   
   if omnipay_response[:success]
     log_payment(omnipay_response[:amount], omnipay_response[:transaction_id])
+    current_order.set_paid!
     redirect_to root_path, :notice => "Successful Payment"
   else
     if omnipay_response[:error] == Omnipay::CANCELED
@@ -148,33 +155,11 @@ In any case, should you need to investigate further, there is the following valu
 
 ### Optional parameters when calling the payment url
 
-You may specify these GET parameters when calling the payment url. They may or may not be supported, and other may be available. Check your adapter documentation.
+You may specify these parameters when calling the payment redirection. They may or may not be supported, and other may be available. Check your adapter documentation.
 
-- `transaction_id` : the payment reference to be used in the gateway
-- `title` : a title to display on the payment page, referencing what is paid
-- `locale` : the language to use in the payment process (ISO 639-1)
-
-
-### Pass a hash to the callback action
-
-You may want to have more informations in the callback. For example, if you have an e-commerce application and the user has multiple pending orders, you may want to know what order was just payed. You can get this by passing a `context` hash to the payment URL, which will then be accessible in the `omniauth.response` hash.
-
-```ruby
-
-# app/views/orders/payment.html.erb
- <%= link_to 'Pay Now', '/pay/sandbox?' + { :amount => @order.amount, :context =>  { :order_id: @order.id }}.to_query %>
-
-
-# app/controllers/payments_controller.rb
-def callback
-
-  omnipay_response = request.env['omnipay.response']
-
-  order = Order.find(omnipay_response[:context][:order_id])
-  order.set_paid! if omnipay_response[:success] && omnipay_response[:amount] == order.amount
-
-end
-```
+- `:transaction_id` : the payment reference to be used in the gateway
+- `:title` : a title to display on the payment page, referencing what is paid
+- `:locale` : the language to use in the payment process (ISO 639-1)
 
 
 ### Dynamic gateway configuration
@@ -188,7 +173,7 @@ The initializer is a static file only loaded at the applications' start. You may
 # for a shop having this id, and will forward to its payment page. 
 # The callbacks will be on `/pay/:shop_id/callback`
 
-config.middleware.use Omnipay::Gateway do |uid|
+Omnipay.use_gateway do |uid|
 
     shop = Shop.find(uid)
 

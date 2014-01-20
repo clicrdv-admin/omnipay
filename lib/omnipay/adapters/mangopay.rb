@@ -15,20 +15,19 @@ module Omnipay
 
       attr_reader :client
 
-      def initialize(callback_url, config = {})
+      def initialize(config = {})
 
         raise ArgumentError.new("Missing client_id, client_passphrase, or wallet_id parameter") unless [config[:client_id], config[:client_passphrase], config[:wallet_id]].all?
 
         @client = Client.new(config[:client_id], config[:client_passphrase], :sandbox => !!config[:sandbox])
-        @callback_url = callback_url
         @wallet_id = config[:wallet_id]
 
       end
 
 
-      def request_phase(amount, params = {})
+      def request_phase(amount, callback_url, params = {})
 
-        transaction_id, redirect_url = create_web_payin(amount, params)
+        transaction_id, redirect_url = create_web_payin(amount, callback_url, params)
 
         # Generate the path and query parameters from the returned redirect_url string
         uri = URI(redirect_url)
@@ -94,7 +93,7 @@ module Omnipay
 
       private
 
-      def create_web_payin(amount, params)
+      def create_web_payin(amount, callback_url, params)
 
         # Create a user
         random_key = "#{Time.now.to_i}-#{(0...3).map { ('a'..'z').to_a[rand(26)] }.join}"
@@ -121,7 +120,7 @@ module Omnipay
             :Amount => 0
           },
           :CreditedWalletId => @wallet_id,
-          :ReturnURL => @callback_url,
+          :ReturnURL => callback_url,
           :Culture => (params[:locale] || 'fr').upcase,
           :CardType => 'CB_VISA_MASTERCARD',
           :SecureMode => 'FORCE'

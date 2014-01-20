@@ -1,22 +1,16 @@
 <h1 style="margin: 1em 0;">Choose your plan</h1>
 
 
-<div class="large-4 columns">
-  <ul class="pricing-table">
-    <li class="title">Item 1 (Oneclicpay)</li>
-    <li class="price"><%= '%.2f €' % (995.to_f/100) %></li>
-    <li class="cta-button"><a class="button" href="/pay/afone?<%= Rack::Utils.build_nested_query(:amount => "995", :title => "Item 1", :locale => "en", :context => @context) %>">Buy Now</a></li>
-  </ul>
-</div>
 
-
-<div class="large-4 columns">
-  <ul class="pricing-table">
-    <li class="title">Item 2 (Mangopay)</li>
-    <li class="price"><%= '%.2f €' % (1295.to_f/100) %></li>
-    <li class="cta-button"><a class="button" href="/pay/mangopay?<%= Rack::Utils.build_nested_query(:amount => "1295", :context => @context, :locale => 'en') %>">Buy Now</a></li>
-  </ul>
-</div>
+<% ITEMS.each do |item_key, item| %>
+  <div class="large-4 columns">
+    <ul class="pricing-table">
+      <li class="title"><%= item[:title] %></li>
+      <li class="price"><%= '%.2f €' % (item[:price].to_f/100) %></li>
+      <li class="cta-button"><a class="button" href="/pay/<%= item_key %>">Buy Now</a></li>
+    </ul>
+  </div>
+<% end %>
 
 
 <form action="/custom-price" method="post">

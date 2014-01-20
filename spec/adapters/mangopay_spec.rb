@@ -25,7 +25,7 @@ describe Omnipay::Adapters::Mangopay do
     }
   end
 
-  let(:adapter){ Omnipay::Adapters::Mangopay.new(callback_url, adapter_params) }
+  let(:adapter){ Omnipay::Adapters::Mangopay.new(adapter_params) }
 
 
   describe "#initialize" do
@@ -37,10 +37,10 @@ describe Omnipay::Adapters::Mangopay do
 
       [:client_id, :client_passphrase, :wallet_id].each do |mandatory_key|
         invalid_params = adapter_params.clone.tap{|params| params.delete mandatory_key}
-        expect { Omnipay::Adapters::Mangopay.new(callback_url, invalid_params) }.to raise_error ArgumentError, error_message
+        expect { Omnipay::Adapters::Mangopay.new(invalid_params) }.to raise_error ArgumentError, error_message
       end
 
-      expect { Omnipay::Adapters::Mangopay.new(callback_url, adapter_params) }.not_to raise_error
+      expect { Omnipay::Adapters::Mangopay.new(adapter_params) }.not_to raise_error
 
     end
 
@@ -57,7 +57,7 @@ describe Omnipay::Adapters::Mangopay do
     it "should build a valid request" do
 
       VCR.use_cassette('mangopay_request_phase') do      
-        adapter.request_phase(amount).should == [
+        adapter.request_phase(amount, callback_url).should == [
           'GET',
           'https://homologation-secure-p.payline.com/webpayment/',
           {'reqCode' => 'prepareStep2', 'stepCode' => 'step2', 'token' => 'MANGOPAY_TOKEN'},
@@ -70,9 +70,9 @@ describe Omnipay::Adapters::Mangopay do
 
     it "should have a sandbox mode" do
 
-      production_adapter = Omnipay::Adapters::Mangopay.new(callback_url, adapter_params.merge(:sandbox => false))
+      production_adapter = Omnipay::Adapters::Mangopay.new(adapter_params.merge(:sandbox => false))
 
-      expect { production_adapter.request_phase(amount) }.to raise_error
+      expect { production_adapter.request_phase(amount, callback_url) }.to raise_error
 
       # The production mangopay API is called
       WebMock.should have_requested(:post, "https://client_id:client_passphrase@api.mangopay.com/v2/client_id/users/natural").with(
@@ -102,7 +102,7 @@ describe Omnipay::Adapters::Mangopay do
       end
 
 
-      adapter.request_phase(amount, :locale => "en")
+      adapter.request_phase(amount, callback_url, :locale => "en")
 
     end
 

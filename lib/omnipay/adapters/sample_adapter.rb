@@ -23,9 +23,7 @@ module Omnipay
       #   * *:api_key* [String] (mandatory) : the API key given for your fictive gateway's account
       #   * *:sandbox* [Boolean] (optional) : whether to use a sandboxed payment page, or a real one. Defaults to true
       # @return [SampleAdapter]
-      def initialize(callback_url, config = {})
-        @callback_url = callback_url
-
+      def initialize(config = {})
         @api_key = config[:api_key]
         raise ArgumentError.new("Missing api_key") unless @api_key
 
@@ -46,11 +44,11 @@ module Omnipay
       #  * +[Hash]+   the GET or POST parameters to send to the payment page
       #  * +[String]+ the unique transaction_id given by the payment provider for the upcoming payment. Has to be accessible in the callback phase. 
 
-      def request_phase(amount, params={})
+      def request_phase(amount, calback_url, params={})
         amount_in_dollar = amount * 1.0 / 100
         locale = params[:locale] || 'en'
 
-        transaction = build_new_transaction(amount_in_dollars, locale)
+        transaction = build_new_transaction(amount_in_dollars, callback_url, locale)
 
         uri = URI(transaction.payment_url)
 

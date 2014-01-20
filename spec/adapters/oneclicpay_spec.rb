@@ -10,7 +10,7 @@ describe Omnipay::Adapters::Oneclicpay do
   let(:secret_key){"secret_key"}
   let(:amount){1295}
 
-  let(:adapter){Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)}
+  let(:adapter){Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)}
 
   describe "#initialize" do
 
@@ -18,17 +18,17 @@ describe Omnipay::Adapters::Oneclicpay do
 
       error_message = 'Missing tpe_id or secret_key parameter'
 
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, {}) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :secret_key => secret_key) }.to raise_error ArgumentError, error_message
-      expect { Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key) }.not_to raise_error
+      expect { Omnipay::Adapters::Oneclicpay.new({}) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:secret_key => secret_key) }.to raise_error ArgumentError, error_message
+      expect { Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key) }.not_to raise_error
 
     end
 
     it "should have a sandbox mode" do
 
-      production_adapter = Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key)
-      sandbox_adapter = Omnipay::Adapters::Oneclicpay.new(callback_url, :tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)
+      production_adapter = Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key)
+      sandbox_adapter = Omnipay::Adapters::Oneclicpay.new(:tpe_id => tpe_id, :secret_key => secret_key, :sandbox => true)
 
       # Check the endpoints
       production_adapter.send(:redirect_url).should == "https://secure.oneclicpay.com"
@@ -51,7 +51,7 @@ describe Omnipay::Adapters::Oneclicpay do
 
 
     it "should build a valid request" do
-      adapter.request_phase(amount).should == [
+      adapter.request_phase(amount, callback_url).should == [
         'POST',
         'https://secure.homologation.oneclicpay.com',
         {
@@ -63,7 +63,7 @@ describe Omnipay::Adapters::Oneclicpay do
           :nom_produit => "",
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
-          :sec => "df899958eb68aa5bdc709a708f73614c116f54f7ad1bf818e31a416d896374da43a903e850a70decbc4d548fab1bbaff2576d8c76e3f7c70f02eca95eff1115e"          
+          :sec => "d39155c351027f2110a5757097e4434e362bf2a584685e200f274adc6e7f3e70d9eeaf520c4ccb88b443dba18a1b211c40890882477945e983204010fae1b6d0"          
         },
         '1388491766-tpe_id-mpv'
       ]
@@ -74,7 +74,8 @@ describe Omnipay::Adapters::Oneclicpay do
       title = "title"
       locale = "en"
 
-      adapter.request_phase(amount, 
+      adapter.request_phase(amount,
+                            callback_url,
                             :transaction_id => reference, 
                             :title => title, 
                             :locale => locale).should == [
@@ -89,15 +90,15 @@ describe Omnipay::Adapters::Oneclicpay do
           :nom_produit => "title",
           :urlRetourOK => "http://callback.url",
           :urlRetourNOK => "http://callback.url",
-          :sec => "8269d3c7c901628594499283a855c5c37b8ebc05b741e4818dc439ceb7ee30493bdabe993b7425ea327828f71c4e3d9d8e8574683d7a7a872392f93d9df56731"          
+          :sec => "13c067d6e2cf48804336e0f2d6591fe28f1710c7f1baaa9a43fa8383976ff7fca14a6ec2ac2455681d372edaf8b35353b996e7008dce0f28c6eb6ee530a65f69"          
         },
         'reference'
       ]
     end
 
     it "should generate a random transaction id if none specified" do
-      transaction_id_1 = adapter.request_phase(amount)[2][:idTransaction]
-      transaction_id_2 = adapter.request_phase(amount)[2][:idTransaction]
+      transaction_id_1 = adapter.request_phase(amount, callback_url)[2][:idTransaction]
+      transaction_id_2 = adapter.request_phase(amount, callback_url)[2][:idTransaction]
 
       transaction_id_1.should_not == transaction_id_2
     end
