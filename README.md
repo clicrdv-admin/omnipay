@@ -1,6 +1,6 @@
 # Omnipay
 
-[![Code Climate](https://codeclimate.com/github/clicrdv/omnipay.png)](https://codeclimate.com/github/clicrdv/omnipay)
+[![Build Status](https://travis-ci.org/clicrdv/omnipay.png?branch=master)](https://travis-ci.org/clicrdv/omnipay) [![Code Climate](https://codeclimate.com/github/clicrdv/omnipay.png)](https://codeclimate.com/github/clicrdv/omnipay)
 
 Omnipay is a library that standardize the integration of multiple off-site payment gateways. It is heavily inspired by the excellent [omniauth](http://github.com/intridea/omniauth/).
 
