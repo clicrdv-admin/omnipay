@@ -4,6 +4,11 @@ require 'rspec'
 require 'rack/test'
 require 'vcr'
 
+if RUBY_VERSION >= '1.9'
+  require 'coveralls'
+  Coveralls.wear!
+end
+
 require 'omnipay'
 
 RSpec.configure do |config|
