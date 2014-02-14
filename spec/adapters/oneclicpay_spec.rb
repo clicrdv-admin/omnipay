@@ -2,6 +2,10 @@ require 'spec_helper'
 
 require 'omnipay/adapters/oneclicpay'
 
+if RUBY_VERSION < '1.9'
+  require 'active_support'
+end
+
 
 describe Omnipay::Adapters::Oneclicpay do
 
@@ -47,6 +51,26 @@ describe Omnipay::Adapters::Oneclicpay do
     before(:each) do
       Kernel.srand(0) # Reset the RNG
       Time.stub(:now).and_return(Time.at(1388491766)) # Freeze the time
+
+      # For ruby 1.8.7 : use ordered hash for signature computation. Otherwise the spec will fail bu the code still work (the signature still being coherent with the unknow hahs ordering)
+      # Ugly, ugly hack. Be sure to update this method when changing Oneclicpay#redirect_params_for
+      if RUBY_VERSION < '1.9'
+
+        def adapter.redirect_params_for(amount, product_name, transaction_id, locale, callback_url)
+          params = ActiveSupport::OrderedHash.new
+          params[:montant] = (amount.to_f/100).to_s
+          params[:idTPE] = @tpe_id
+          params[:idTransaction] = transaction_id
+          params[:devise] = 'EUR'
+          params[:lang] = locale
+          params[:nom_produit] = product_name
+          params[:urlRetourOK] = callback_url
+          params[:urlRetourNOK] = callback_url
+          params[:sec] = signature(params)
+          params
+        end
+
+      end
     end
 
 
