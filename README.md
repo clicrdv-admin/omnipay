@@ -131,9 +131,8 @@ In your callback action, you will have access to the results of the payment in t
 
  - `:success (boolean)` : was the payment successful or not.
 
-If the payment is **successful**, the following values are also present in the hash :
+If the payment is **successful**, the following value is also present in the hash :
 
- - `:amount (integer)` : the amount paid, in cents.
  - `:transaction_id (string)` : the identifier of the transaction on the gateway side. 
 
 If the payment was **not successful**, the following values are present :

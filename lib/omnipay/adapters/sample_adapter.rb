@@ -71,8 +71,7 @@ module Omnipay
       # @param params [Hash] the GET/POST parameters sent by the payment gateway to the callback url
       # @return [Hash] the resulting response hash which will be accessible in the application. Must contain the following values :
       #  * *:success* (+Boolean+) | Did the payment occur or not?
-      #  * *:amount* (+Integer+) <i>if successful</i> | The amount <b>in cents</b> actually payed
-      #  * *:transaction_id* (+String+) <i>if successful</i> | The id of the transaction. Must match the one returned in the request phase.
+      #  * *:transaction_id* (+String+) <i>if successful</i> | The id of the transaction.
       #  * *:error* (+Symbol+) <i>if failed</i> | The reason why the payment was not successful. The available values are :
       #    * _Omnipay::CANCELED_ : The payment didn't occur because of the user.
       #    * _Omnipay::PAYMENT_REFUSED_ : The payment didn't occue because of an error on the gateway's side.
@@ -88,7 +87,7 @@ module Omnipay
         end
 
         if transaction.success
-          { :success => true, :amount => (transaction.amount*100).round, :transaction_id => transaction_id }
+          { :success => true, :transaction_id => transaction_id }
         else
           if transaction.canceled
             { :success => false, :error => Omnipay::CANCELATION }
