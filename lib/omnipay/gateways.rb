@@ -3,7 +3,6 @@ module Omnipay
   # Structure responsible for storing and accessing the application's configured gateways
   class Gateways
 
-
     def initialize
       @gateways = {}
       @dynamic_configs = [] # Collection of procs which given a uid may or may not return a gateway config hash
@@ -11,6 +10,14 @@ module Omnipay
 
 
     # Add a new gateway, static or dynamic
+    #
+    # Can be initialized via a config hash, or a block.
+    #
+    # If initialized with a hash, it must contains the `:uid` and `:adapter` keys
+    #
+    # If initialized with a block, the block must take the uid as an argument, and return a config hash with an `:adapter` key
+    # @param opts [Hash] the gateway configuration, if static.
+    # @param block [Proc] the gateway configuration, if dynamic.
     def push(opts = {}, &block)
       if block_given?
         @dynamic_configs << Proc.new(&block)
@@ -24,7 +31,9 @@ module Omnipay
     end
 
 
-    # Find and/or instanciate a gateway for the given uid
+    # Find a static gateway or instanciate a dynamic gateway for the given uid
+    # @param uid [String] the gateway's uid
+    # @return [Gateway] the corresponding gateway, or nil if none
     def find(uid)
       gateway = @gateways[uid]
       return gateway if gateway

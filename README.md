@@ -27,16 +27,15 @@ Or install it yourself as:
 ## Get Started
 
 Let's say you want to integrate payments via mangopay for your application. The code examples are for a Rails application, but can be easily adapted for any Rack application (Sinatra, Grape, ...)
-
+ 
 ### Configure a Mangopay gateway
 
-You will first need to setup Omnipay with a secret token in order to securize the payments. You can generate one in an irb console by calling `SecureRandom.hex` ( `require 'active_support'` ) .
-
-You will also need to setup its payment gateways
+You will first need to setup an omnipay gateway, with an adapter for the payment provider you wish to integrate
 
 ```ruby
 # config/initializers/omnipay.rb
 
+require 'omnipay'
 require 'omnipay/adapters/mangopay'
 
 Omnipay.use_gateway( 
@@ -47,7 +46,7 @@ Omnipay.use_gateway(
   # The payment gateway you wish to map under this urls. 
   :adapter  => Omnipay::Adapters::Mangopay,
 
-  # The gateway configuration (depends on the chosen adapter).
+  # The adapter configuration (for mangopay, we need to provide the following keys)
   :config   => {
     :client_id         => "your-client-id",
     :client_passphrase => "your-secret-passphrase",
@@ -72,20 +71,20 @@ end
 
 ### Redirect the user to the payment page
 
-A redirection can be called in a controller to the payment page. The mandatory argument is the amount in cents to pay.
+A redirection can be called in a controller to the payment page. The mandatory argument is the amount in cents to pay. There may be optional arguments, depending on the adapter used.
 
 ```ruby
 # app/controllers/orders_controller.rb
 def pay
   total_with_taxes = current_order.total_with_taxes
   session[:current_order] = @order.id
-  redirect_to_payment 'my-payment-gateway', :amount => (total_with_taxes*100) and return
+  redirect_to_payment 'my-payment-gateway', :amount => (total_with_taxes*100), :currency => 'EUR' and return
 end
 ```
 
-If you are not using rails, you can get the raw Rack::Response to return for the redirection to occur :
+If you are not using rails, you can get the raw Rack::Response to return for the redirection to occur. Inb this case, you also need to specify your application's current host.
 ```ruby
-Omnipay.gateways.find('my-payment-gateway').payment_redirection(:host => 'http://your.host.tld', :amount => amount)
+Omnipay.gateways.find('my-payment-gateway').payment_redirection(:host => 'http://your.host.tld', :amount => amount, :currency => 'EUR')
 ```
 
 
@@ -93,7 +92,7 @@ Omnipay.gateways.find('my-payment-gateway').payment_redirection(:host => 'http:/
 
 If you try to fill in the payment form, you may notice that you are redirected to your application's 404 page.
 
-This is because, with the abose configuration, mangopay will redirect the users to the following URL : `GET /pay/my-payment-gateway/callback`.
+This is because, with the above configuration, mangopay will redirect the users to the following URL : `GET /pay/my-payment-gateway/callback`.
 
 You need to setup a controller action with a route to handle it : 
 
@@ -143,7 +142,7 @@ If the payment was **not successful**, the following values are present :
      - `Omnipay::CANCELED` : the payment was canceled by the user.
      - `Omnipay::PAYMENT_REFUSED` : the payment was refused on the gateway side.
      - `Omnipay::INVALID_RESPONSE` : there was an error parsing the response from the gateway.
-     - `Omnipay::WRONG_SIGNATURE` : the response seemed good and successful, but didn't match the former redirection (e.g : the amounts are not matching).
+redirection (e.g : the amounts are not matching).
  - `:error_message (string)` : a more detailed trace of the context of the error
 
 
@@ -154,14 +153,6 @@ In any case, should you need to investigate further, there is the following valu
 
 
 ## More features
-
-### Optional parameters when calling the payment url
-
-You may specify these parameters when calling the payment redirection. They may or may not be supported, and other may be available. Check your adapter documentation.
-
-- `:transaction_id` : the payment reference to be used in the gateway
-- `:title` : a title to display on the payment page, referencing what is paid
-- `:locale` : the language to use in the payment process (ISO 639-1)
 
 
 ### Dynamic gateway configuration

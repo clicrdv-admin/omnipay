@@ -22,7 +22,11 @@ module Omnipay
     end
   end
 
-
+  # Custom helpers for rails applications
+  # Define the method : <b>+ActionController#redirect_to_payment(uid, opts={})+</b>
+  # - <b>+uid+</b> : the gateway's uid
+  # - <b>+opts+</b> : the options expected by Gateway#payment_redirection. The host is automatically determined, but the <b>+amount+</b> in cents, and other mandatory options depending on the adapter, have to be specified.
+  # Called in a controller, this method redirects the visitor to the payment provider.
   class Railtie < Rails::Railtie
 
     initializer "omnipay.configure_rails_initialization" do

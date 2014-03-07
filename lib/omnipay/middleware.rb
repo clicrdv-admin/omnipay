@@ -18,6 +18,8 @@ module Omnipay
 
     # The standard rack middleware call. Will be processed by an instance of RequestPhase or CallbackPhase if the
     # path matches the adapter's uid. Will forward to the app otherwise
+    # @param env [Hash] the request's environment
+    # @return [Rack::Reponse]
     def call(env)
 
       # Get the current request
