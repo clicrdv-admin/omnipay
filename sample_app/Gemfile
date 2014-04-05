@@ -5,6 +5,8 @@ gem 'omnipay', :path => '..'
 gem 'sinatra'
 gem 'sinatra-contrib'
 
+gem 'bitpay-client'
+
 gem 'dotenv'
 
 gem 'shotgun'

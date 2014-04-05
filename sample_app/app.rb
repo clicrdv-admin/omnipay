@@ -3,8 +3,10 @@ require 'sinatra/base'
 require 'json'
 
 require 'omnipay'
-require 'omnipay/adapters/oneclicpay'
+require 'omnipay/adapters/bitpay'
 require 'omnipay/adapters/mangopay'
+
+require 'bitpay'
 
 require 'dotenv'
 Dotenv.load
@@ -32,29 +34,26 @@ class OmnipaySampleApp < Sinatra::Base
     }
   )
 
-  Omnipay.use_gateway( 
-    :uid => "afone",
-    :adapter => Omnipay::Adapters::Oneclicpay,
+  Omnipay.use_gateway(
+    :uid => "bitpay",
+    :adapter => Omnipay::Adapters::BitPay,
     :config => {
-      :tpe_id => ENV['AFONE_PUBLIC_KEY'],
-      :secret_key => ENV['AFONE_PRIVATE_KEY'],
-      :sandbox => true
+      :client_id => ENV['BITPAY_API_KEY']
     }
   )
-
 
   use Omnipay::Middleware
 
   ITEMS = {
     'item1' => {
-      :title => 'Item 1 (Oneclicpay)',
-      :price => 995,
-      :gateway => 'afone'
+      :title => 'Item 1 (BitPay)',
+      :price => 850,
+      :gateway => 'bitpay'
     },
 
     'item2' => {
       :title => 'Item 1 (Mangopay)',
-      :price => 1295,
+      :price => 950,
       :gateway => 'mangopay'
     }
   }
