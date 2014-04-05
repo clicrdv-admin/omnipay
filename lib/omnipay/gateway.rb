@@ -51,7 +51,7 @@ module Omnipay
       method, url, params = @adapter.request_phase(amount, callback_url, opts)
 
       if method == 'GET'
-        redirect_url = url + '?' + Rack::Utils.build_query(params)
+        redirect_url = url + (url.include?('?') ? '&' : '?') + Rack::Utils.build_query(params)
         Rack::Response.new.tap{|response| response.redirect(redirect_url)}
 
       elsif method == 'POST'
