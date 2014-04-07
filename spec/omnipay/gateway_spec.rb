@@ -46,7 +46,7 @@ describe Omnipay::Gateway do
     it "should handle GET redirections" do
       @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
 
-      response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)
+      response = gateway.payment_redirection(:base_uri => 'http://host.tld', :amount => 1295)
       response.class.should == Rack::Response
       response.status.should == 302
       response.headers['Location'].should == "http://www.host.tld/payment?token=123456"
@@ -56,11 +56,19 @@ describe Omnipay::Gateway do
     it "should handle POST redirections" do
       @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['POST', 'http://www.host.tld/payment', {:token => '123456'}])
 
-      response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)
+      response = gateway.payment_redirection(:base_uri => 'http://host.tld', :amount => 1295)
       response.class.should == Rack::Response
       response.status.should == 200
       response.headers['Content-Type'].should == "text/html;charset=utf-8"
       response.body.should == [ Omnipay::AutosubmitForm.new('http://www.host.tld/payment', {:token => '123456'}).html ]
+    end
+
+
+    it "should print a deprecation warning if :host is used instead of :base_uri" do
+      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
+      
+      Kernel.should_receive(:warn).with('[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead.')
+      response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)      
     end
 
   end

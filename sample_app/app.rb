@@ -66,7 +66,7 @@ class OmnipaySampleApp < Sinatra::Base
   get '/pay/:item_id' do
     item = ITEMS[params[:item_id]]
 
-    redirection = Omnipay.gateways.find(item[:gateway]).payment_redirection(:host => 'localhost:9393', :amount => item[:price])
+    redirection = Omnipay.gateways.find(item[:gateway]).payment_redirection(:base_uri => 'http://localhost:9393', :amount => item[:price])
     return redirection.to_a
 
     # In Rails, we could have used redirect_to_payment(:amount => item[:price]) and return
@@ -76,7 +76,7 @@ class OmnipaySampleApp < Sinatra::Base
   # Custom price
   post '/custom-price' do
     amount = (params[:price].to_f * 100).to_i
-    Omnipay.gateways.find('afone').payment_redirection(:host => 'localhost:9393', :amount => amount).to_a
+    Omnipay.gateways.find('afone').payment_redirection(:base_uri => 'http://localhost:9393', :amount => amount).to_a
   end
 
   # Payment callback handling

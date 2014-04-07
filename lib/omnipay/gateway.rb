@@ -28,18 +28,23 @@ module Omnipay
     # The Rack::Response corresponding to the redirection to the payment page
     # @param opts [Hash] The attributes of the current payment. Will be passed on to the adapter.
     # The options hash must contain the following keys : 
-    # - +:host+ : the current host (used in the post-payment redirection)
+    # - +:base_uri+ : the current http scheme + host (used in the post-payment redirection)
     # - +:amount [Integer]+ : the amount to pay, in cents
     # Depending on the adapter used, the options hash may have other mandatory keys. Refer to the adapter's documentation for more details
     # @return [Rack::Response] the GET or POST redirection to the payment provider
     def payment_redirection(opts = {})
-      host = opts.delete :host
+      base_uri = opts.delete :base_uri
       amount = opts.delete :amount
 
-      raise ArgumentError.new('Missing parameter :host') unless host
+      if !base_uri && opts[:host]
+        base_uri = opts.delete :host
+        Kernel.warn "[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead."
+      end
+
+      raise ArgumentError.new('Missing parameter :base_uri') unless base_uri
       raise ArgumentError.new('Missing parameter :amount') unless amount
 
-      callback_url = "#{host}#{Omnipay.configuration.base_path}/#{uid}/callback"
+      callback_url = "#{base_uri}#{Omnipay.configuration.base_path}/#{uid}/callback"
 
       method, url, params = @adapter.request_phase(amount, callback_url, opts)
 

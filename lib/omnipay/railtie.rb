@@ -4,10 +4,10 @@ module Omnipay
     module Helpers
 
       def redirect_to_payment(uid, opts = {})
-        app_host = "#{request.scheme}://#{request.host_with_port}"
+        base_uri = "#{request.scheme}://#{request.host_with_port}"
         gateway = Omnipay.gateways.find(uid)
         if gateway
-          rack_response = gateway.payment_redirection(opts.merge(:host => app_host))
+          rack_response = gateway.payment_redirection(opts.merge(:base_uri => base_uri))
 
           self.response_body = rack_response.body
           self.status = rack_response.status

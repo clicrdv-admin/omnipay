@@ -1,3 +1,6 @@
+# Edge
+* Gateway#payment_redirection expects an option named :base_uri instead of :host. Sending :host is supported, but will print a deprecation message
+
 # 0.1.0
 
 * The request phase is done in the controller instead of via a url
