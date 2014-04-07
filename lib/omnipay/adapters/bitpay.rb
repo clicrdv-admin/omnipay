@@ -37,7 +37,7 @@ module Omnipay
 
       def request_phase(amount, callback_url, params = {})
 
-        invoice = @client.post 'invoice', {:price => amount.to_f / 100, :currency => 'EUR'}
+        invoice = @client.post 'invoice', {:price => amount.to_f / 100, :currency => 'EUR', :redirectURL => callback_url}
 
         raise Error.new(invoice['error']) if invoice.include? 'error'
 
@@ -51,9 +51,6 @@ module Omnipay
         ].each do |option|
           get_params[option] = params[option] if params.include? option
         end
-
-        puts "invoice.inspect\n" * 10
-        puts invoice.inspect
 
         [
           'GET',
@@ -79,7 +76,7 @@ module Omnipay
       
       def callback_hash(params)
 
-        transaction_id = params[:id]
+        transaction_id = params['id']
         transaction = @client.get transaction_id
         
         if transaction == nil
