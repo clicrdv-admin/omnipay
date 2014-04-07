@@ -69,6 +69,21 @@ describe Omnipay::Gateway do
       
       Kernel.should_receive(:warn).with('[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead.')
       response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)      
+      response.headers['Location'].should == "http://www.host.tld/payment?token=123456"
+    end
+
+
+    it "should handle a default base_uri" do
+      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with(1295, 'http://www.anotherhost.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.anotherhost.tld/payment', {:token => '123456'}])
+      
+      Omnipay.configuration.base_uri = "http://www.anotherhost.tld"
+
+      response = gateway.payment_redirection(:amount => 1295)
+      response.headers['Location'].should == "http://www.anotherhost.tld/payment?token=123456"
+
+      response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)      
+      response.headers['Location'].should == "http://www.host.tld/payment?token=123456"
     end
 
   end

@@ -18,6 +18,7 @@ class OmnipaySampleApp < Sinatra::Base
   
   Omnipay.configure do |config|
     # config.base_path = '/my/base/callback/path'
+    # config.base_uri = http://localhost:9393
   end
 
   Omnipay.use_gateway(

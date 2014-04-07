@@ -41,6 +41,8 @@ module Omnipay
         Kernel.warn "[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead."
       end
 
+      base_uri ||= Omnipay.configuration.base_uri
+
       raise ArgumentError.new('Missing parameter :base_uri') unless base_uri
       raise ArgumentError.new('Missing parameter :amount') unless amount
 

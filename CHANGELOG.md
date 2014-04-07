@@ -1,5 +1,6 @@
 # Edge
 * Gateway#payment_redirection expects an option named :base_uri instead of :host. Sending :host is supported, but will print a deprecation message
+* You can now define a default value for this option in `Omnipay.configuration.base_uri`
 
 # 0.1.0
 
