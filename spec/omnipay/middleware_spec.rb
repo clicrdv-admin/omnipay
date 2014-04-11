@@ -19,12 +19,14 @@ describe Omnipay::Middleware do
 
     before(:each) do
       @gateway = double('a gateway')
+      @gateway.stub(:ipn_enabled?).and_return(true)
+
       Omnipay.gateways.stub(:find).with(gateway_uid).and_return(@gateway)
       Omnipay.gateways.stub(:find).with('another_uid').and_return(nil)
     end
 
     it "should intercept requests for the callback phase and add the processed response in the request environment" do
-      expect(@gateway).to receive(:formatted_response_for).with({:foo => 'bar'}).and_return({:success => true})
+      expect(@gateway).to receive(:callback_hash).and_return({:success => true})
       browser.get '/pay/my_gateway/callback?foo=bar'
       browser.last_request.env['omnipay.response'].should == {:success => true}
     end
@@ -42,7 +44,7 @@ describe Omnipay::Middleware do
     it "should handle custom base paths" do
       Omnipay.configuration.base_path = "/payments"
 
-      expect(@gateway).to receive(:formatted_response_for).with({:foo => 'bar'}).and_return({:success => true})
+      expect(@gateway).to receive(:callback_hash).and_return({:success => true})
       browser.get '/payments/my_gateway/callback?foo=bar'
       browser.last_request.env['omnipay.response'].should == {:success => true}    
     end

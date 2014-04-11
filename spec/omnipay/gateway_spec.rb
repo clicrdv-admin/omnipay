@@ -89,17 +89,35 @@ describe Omnipay::Gateway do
   end
 
 
-  describe "#formatted_response_for" do
+  describe "#ipn_hash" do
+    before(:each) do
+      @adapter = double('the adapter instance')
+      Adapter.stub(:new).with(config).and_return(@adapter)
+      @request = mock('a request')
+      @request.stub(:params).and_return({'foo' => 'bar'})
+    end
+ 
+    it "should return the formatted response along with the raw params" do
+      @adapter.stub(:ipn_hash).with(@request).and_return({:success => true, :status => :success, :amount => 1295, :transaction_id => '123456', :reference => 'local_id'})
+
+      gateway.ipn_hash(@request).should == {:success => true, :status => :success, :amount => 1295, :transaction_id => '123456', :reference => 'local_id', :raw => {'foo' => 'bar'}}
+    end
+  end
+
+  # Forward to adapter, and add params
+  describe "#callback_hash" do
 
     before(:each) do
       @adapter = double('the adapter instance')
       Adapter.stub(:new).with(config).and_return(@adapter)
+      @request = mock('a request')
+      @request.stub(:params).and_return({'foo' => 'bar'})
     end
 
     it "should return the formatted response along with the raw params" do
-      @adapter.stub(:callback_hash).with({:ref_id => '123456'}).and_return({:success => true, :amount => 1295, :transaction_id => '123456'})
+      @adapter.stub(:callback_hash).with(@request).and_return({:success => true, :status => :success})
 
-      gateway.formatted_response_for(:ref_id => '123456').should == {:success => true, :amount => 1295, :transaction_id => '123456', :raw => {:ref_id => '123456'}}
+      gateway.callback_hash(@request).should == {:success => true, :status => :success, :raw => {'foo' => 'bar'}}
     end
 
   end

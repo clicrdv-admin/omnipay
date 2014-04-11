@@ -65,11 +65,20 @@ module Omnipay
     end
 
 
-    # The formatted response hash
-    # @param params [Hash] the request GET/POST parameters send with the redirection from the provider
+    # The formatted response hashes
     # @return [Hash] the processed response which will be present in the request environement under 'omnipay.response'
-    def formatted_response_for(params)
-      @adapter.callback_hash(params).merge(:raw => params)
+    def ipn_hash(request)
+      @adapter.ipn_hash(request).merge(:raw => request.params)
+    end
+
+    def callback_hash(request)
+      @adapter.callback_hash(request).merge(:raw => request.params)
+    end
+
+
+    # Is IPN enabled?
+    def ipn_enabled?
+      @adapter_class.ipn?
     end
 
 

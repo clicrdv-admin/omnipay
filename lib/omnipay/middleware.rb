@@ -33,16 +33,18 @@ module Omnipay
       gateway = Omnipay.gateways.find(uid)
       return @app.call(env) unless gateway
 
+      # Handle the IPN phase
+      return call_ipn(request, gateway) if ipn_phase?(request, uid)
+
       # Handle the callback phase
       if callback_phase?(request, uid)
-        # Symbolize the params keys
-        params = Hash[request.params.map{|k,v|[k.to_sym,v]}]
 
-        # Set the formatted response
-        request.env['omnipay.response'] = gateway.formatted_response_for(params)
+        # If no IPN : send the ipn request before
+        if !gateway.ipn_enabled?
+          call_ipn(request, gateway, :force => true)
+        end
 
-        # Force a get request
-        request.env['REQUEST_METHOD'] = 'GET'
+        return call_callback(request, gateway)
       end
 
       # Forward to the app
@@ -53,8 +55,48 @@ module Omnipay
 
     private
 
+    def ipn_path(uid)
+      "#{Omnipay.configuration.base_path}/#{uid}/ipn"
+    end
+
+    def callback_path(uid)
+      "#{Omnipay.configuration.base_path}/#{uid}/callback"
+    end
+
+    def ipn_phase?(request, uid)
+      request.path == ipn_path(uid)
+    end
+
     def callback_phase?(request, uid)
-      request.path == "#{Omnipay.configuration.base_path}/#{uid}/callback"
+      request.path == callback_path(uid)
+    end
+
+    def call_ipn(request, gateway, opts = {})
+      # Force : override the path
+      if opts[:force]
+        request = Rack::Request.new(request.env.dup)
+        request.path = ipn_path(gateway.uid)
+      end
+
+      # Set the formatted response
+      request.env['omnipay.response'] = gateway.ipn_hash(request)
+
+      # Force a POST on the app
+      request.env['REQUEST_METHOD'] = 'POST'
+
+      # Call the app
+      @app.call(request.env)
+    end
+
+    def call_callback(request, gateway)
+      # Set the formatted response
+      request.env['omnipay.response'] = gateway.callback_hash(request)
+
+      # Force a get request
+      request.env['REQUEST_METHOD'] = 'GET'
+
+      # Call the app
+      @app.call(request.env)
     end
 
 

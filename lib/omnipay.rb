@@ -1,12 +1,17 @@
 # The root Omnipay module. Used for defining its global configuration
 module Omnipay
 
+  autoload :Adapter, 'omnipay/adapter'
   autoload :Gateway, 'omnipay/gateway'
   autoload :AutosubmitForm, 'omnipay/autosubmit_form'
   autoload :Configuration, 'omnipay/configuration'
   autoload :Gateways, 'omnipay/gateways'
   autoload :Middleware, 'omnipay/middleware'
+  autoload :Helpers, 'omnipay/helpers'
 
+
+  # Code for a successful transaction
+  SUCCESS = :success
 
   # Error code for a user-initiated payment failure
   CANCELATION = :cancelation
