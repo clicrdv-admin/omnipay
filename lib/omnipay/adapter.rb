@@ -183,23 +183,23 @@ module Omnipay
     # Helpers to format response
     # ==========================
 
-    def payment_error(reason)
-      status_error.merge(
-        :error_message => reason
+    def payment_error(message)
+      status_error(message)
+    end
+
+    def payment_failed(reference, reason)
+      status_failed(reason).merge(
+        :reference => reference
       )
     end
 
-    def payment_failed(reason)
-      status_failed.merge(
-        :error_message => reason
+    def payment_canceled(reference)
+      status_canceled.merge(
+        :reference => reference
       )
     end
 
-    def payment_canceled
-      status_canceled
-    end
-
-    def payment_successful(amount, reference, transaction_id)
+    def payment_successful(reference, transaction_id, amount)
       status_successful.merge(
         :amount => amount,
         :transaction_id => transaction_id,
@@ -208,12 +208,12 @@ module Omnipay
     end
 
 
-    def status_error
-      {:success => false, :status => Omnipay::INVALID_RESPONSE}
+    def status_error(message = '')
+      {:success => false, :status => Omnipay::INVALID_RESPONSE, :error_message => message}
     end
 
-    def status_failed
-      {:success => false, :status => Omnipay::PAYMENT_REFUSED}
+    def status_failed(message = '')
+      {:success => false, :status => Omnipay::PAYMENT_REFUSED, :error_message => message}
     end
 
     def status_canceled

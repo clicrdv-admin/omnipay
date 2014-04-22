@@ -134,7 +134,8 @@ describe Omnipay::Adapters::Mangopay do
       VCR.use_cassette('mangopay_callback_phase') do      
         adapter.ipn_hash(make_request('canceled-transaction-id')).should == {
           :success => false,
-          :status => Omnipay::CANCELATION
+          :status => Omnipay::CANCELATION,
+          :reference => reference
         }
       end
     end
@@ -145,7 +146,8 @@ describe Omnipay::Adapters::Mangopay do
         adapter.ipn_hash(make_request('refused-transaction-id')).should == {
           :success => false,
           :status => Omnipay::PAYMENT_REFUSED,
-          :error_message => "Refused payment for transaction refused-transaction-id.\nCode : 105103\nMessage : Invalid PIN code"
+          :error_message => "Refused payment for transaction refused-transaction-id.\nCode : 105103\nMessage : Invalid PIN code",
+          :reference => reference
         }
       end
     end
