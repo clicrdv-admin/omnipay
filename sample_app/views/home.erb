@@ -1,26 +1,49 @@
-<h1 style="margin: 1em 0;">Choose your plan</h1>
+<h1 style="margin: 1em 0;">Omnipay gateway tester</h1>
 
 
+<% @gateways.each do |gateway| %>
 
-<% ITEMS.each do |item_key, item| %>
-  <div class="large-4 columns">
-    <ul class="pricing-table">
-      <li class="title"><%= item[:title] %></li>
-      <li class="price"><%= '%.2f €' % (item[:price].to_f/100) %></li>
-      <li class="cta-button"><a class="button" href="/pay/<%= item_key %>">Buy Now</a></li>
-    </ul>
-  </div>
+  <form action="/pay/<%= gateway[:title] %>" method="GET">
+    <div class="row">
+      <div class="small-3 columns">
+      </div>
+      <div class="small-9 columns">
+        <h2><small><%= gateway[:title] %></small></h2>
+        <br>
+      </div>
+    </div>
+
+    <% gateway[:config].each do |name, value| %>
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="right-label" class="right"><%= name %></label>
+        </div>
+        <div class="small-9 columns">
+          <input type="text" id="right-label" disabled value="<%= value %>">
+        </div>
+      </div>
+    <% end %>
+
+    <% gateway[:params].each do |name, value| %>
+      <div class="row">
+        <div class="small-3 columns">
+          <label for="right-label" class="right"><%= name %></label>
+        </div>
+        <div class="small-9 columns">
+          <input type="text" id="right-label" name="<%= name %>" value="<%= value %>">
+        </div>
+      </div>
+    <% end %>
+
+    <div class="row">
+      <div class="small-3 columns">
+      </div>
+      <div class="small-9 columns">
+        <input class="button" type="submit" value="GO">
+      </div>
+    </div>
+  </form>
+
+  <hr>
+
 <% end %>
-
-
-<form action="/custom-price" method="post">
-  <div class="large-4 columns">
-    <ul class="pricing-table">
-      <li class="title">Custom</li>
-      <li class="price">
-        <input type="text" name="price" placeholder="Price" style="height: 2rem; margin-bottom: 0;">
-      </li>
-      <li class="cta-button"><input type="submit" class="button" value="Buy Now"></li>
-    </ul>
-  </div>
-</form>

@@ -34,7 +34,6 @@ module Omnipay
     # @return [Rack::Response] the GET or POST redirection to the payment provider
     def payment_redirection(opts = {})
       base_uri = opts.delete :base_uri
-      amount = opts.delete :amount
 
       if !base_uri && opts[:host]
         base_uri = opts.delete :host
@@ -44,11 +43,11 @@ module Omnipay
       base_uri ||= Omnipay.configuration.base_uri
 
       raise ArgumentError.new('Missing parameter :base_uri') unless base_uri
-      raise ArgumentError.new('Missing parameter :amount') unless amount
 
+      ipn_url      = "#{base_uri}#{Omnipay.configuration.base_path}/#{uid}/ipn"
       callback_url = "#{base_uri}#{Omnipay.configuration.base_path}/#{uid}/callback"
 
-      method, url, params = @adapter.request_phase(amount, callback_url, opts)
+      method, url, params = @adapter.request_phase(opts, ipn_url, callback_url)
 
       if method == 'GET'
         redirect_url = url + (url.include?('?') ? '&' : '?') + Rack::Utils.build_query(params)

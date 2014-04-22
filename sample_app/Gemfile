@@ -10,3 +10,4 @@ gem 'bitpay-client'
 gem 'dotenv'
 
 gem 'shotgun'
+gem 'pry'

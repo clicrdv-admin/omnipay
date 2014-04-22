@@ -3,12 +3,15 @@ require 'sinatra/base'
 require 'json'
 
 require 'omnipay'
-require 'omnipay/adapters/bitpay'
+require 'omnipay/adapters/comnpay'
 require 'omnipay/adapters/mangopay'
 
 require 'bitpay'
 
 require 'dotenv'
+
+require 'pry'
+
 Dotenv.load
 
 class OmnipaySampleApp < Sinatra::Base
@@ -23,6 +26,22 @@ class OmnipaySampleApp < Sinatra::Base
     # config.base_uri = http://localhost:9393
   end
 
+
+  default_payment_config = {
+    :currency => 'EUR',
+    :locale   => 'fr'
+  }
+
+  Omnipay.use_gateway(
+    :uid => "comnpay",
+    :adapter => Omnipay::Adapters::Comnpay,
+    :config => {
+      :tpe_id => ENV['COMNPAY_TPE_ID'],
+      :secret_key => ENV['COMNPAY_SECRET_KEY'],
+      :payment => default_payment_config
+    }
+  )
+
   Omnipay.use_gateway(
     :uid => "mangopay",
     :adapter => Omnipay::Adapters::Mangopay,
@@ -30,54 +49,58 @@ class OmnipaySampleApp < Sinatra::Base
       :client_id => ENV['MANGOPAY_PUBLIC_KEY'],
       :client_passphrase => ENV['MANGOPAY_PRIVATE_KEY'],
       :wallet_id => ENV['MANGOPAY_WALLET_ID'],
-      :sandbox => true
+      :payment => default_payment_config
     }
   )
 
-  Omnipay.use_gateway(
-    :uid => "bitpay",
-    :adapter => Omnipay::Adapters::BitPay,
-    :config => {
-      :client_id => ENV['BITPAY_API_KEY']
-    }
-  )
+  GATEWAYS = %w(comnpay mangopay)
+
+
+  # Omnipay.use_gateway(
+  #   :uid => "bitpay",
+  #   :adapter => Omnipay::Adapters::BitPay,
+  #   :config => {
+  #     :client_id => ENV['BITPAY_API_KEY']
+  #   }
+  # )
 
   use Omnipay::Middleware
 
-  ITEMS = {
-    'item1' => {
-      :title => 'Item 1 (BitPay)',
-      :price => 850,
-      :gateway => 'bitpay'
-    },
-
-    'item2' => {
-      :title => 'Item 1 (Mangopay)',
-      :price => 950,
-      :gateway => 'mangopay'
-    }
-  }
 
   get '/' do
-    @context = {:foo => "bar", :baz => {:boo => "booboo"}}
+    @gateways = GATEWAYS.map do |gateway_id|
+      gateway = Omnipay.gateways.find(gateway_id)
+
+      {
+        :title  => gateway_id,
+        :config => gateway.adapter.config.to_h,
+        :params => gateway.adapter.default_payment_params.to_h
+      }
+    end
+
     erb :home
   end
 
-  get '/pay/:item_id' do
-    item = ITEMS[params[:item_id]]
+  get '/pay/:gateway' do
+    # Symbolize keys
+    params.keys.each do |key|
+      params[key.to_sym] = params.delete(key)
+    end
 
-    redirection = Omnipay.gateways.find(item[:gateway]).payment_redirection(:base_uri => 'http://localhost:9393', :amount => item[:price])
+    # Reformat integers
+    params[:amount] = params[:amount].to_i
+    params[:fees]   = params[:fees].to_i
+
+    redirection = Omnipay.gateways.find(params[:gateway]).payment_redirection(params.merge(:base_uri => 'http://localhost:9393'))
     return redirection.to_a
-
-    # In Rails, we could have used redirect_to_payment(:amount => item[:price]) and return
   end
 
 
-  # Custom price
-  post '/custom-price' do
-    amount = (params[:price].to_f * 100).to_i
-    Omnipay.gateways.find('afone').payment_redirection(:base_uri => 'http://localhost:9393', :amount => amount).to_a
+  # Payment IPN handling
+  post '/pay/:gateway/ipn' do
+    
   end
+
 
   # Payment callback handling
   get '/pay/:gateway/callback' do
@@ -112,15 +135,10 @@ class OmnipaySampleApp < Sinatra::Base
 
 
   get '/success' do
-    @amount = 1250
-    @reference = "REF-123"
-
     erb :success
   end
 
   get '/failure' do
-    @error = "You canceled the transaction"
-
     erb :failure
   end
 
