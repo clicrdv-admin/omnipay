@@ -207,6 +207,13 @@ module Omnipay
       )
     end
 
+    def payment_status_changed(reference, transaction_id, status)
+      {
+        :reference => reference,
+        :transaction_id => transaction_id,
+        :status => status 
+      }
+    end
 
     def status_error(message = '')
       {:success => false, :status => Omnipay::INVALID_RESPONSE, :error_message => message}

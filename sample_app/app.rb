@@ -5,6 +5,7 @@ require 'json'
 require 'omnipay'
 require 'omnipay/adapters/comnpay'
 require 'omnipay/adapters/mangopay'
+require 'omnipay/adapters/bitpay'
 
 require 'bitpay'
 
@@ -29,40 +30,42 @@ class OmnipaySampleApp < Sinatra::Base
 
   default_payment_config = {
     :currency => 'EUR',
-    :locale   => 'fr'
+    :locale   => 'fr',
+    :amount   => 250,
+    :fees     => 0
   }
 
-  Omnipay.use_gateway(
-    :uid => "comnpay",
-    :adapter => Omnipay::Adapters::Comnpay,
-    :config => {
-      :tpe_id => ENV['COMNPAY_TPE_ID'],
-      :secret_key => ENV['COMNPAY_SECRET_KEY'],
-      :payment => default_payment_config
-    }
-  )
-
-  Omnipay.use_gateway(
-    :uid => "mangopay",
-    :adapter => Omnipay::Adapters::Mangopay,
-    :config => {
-      :client_id => ENV['MANGOPAY_PUBLIC_KEY'],
-      :client_passphrase => ENV['MANGOPAY_PRIVATE_KEY'],
-      :wallet_id => ENV['MANGOPAY_WALLET_ID'],
-      :payment => default_payment_config
-    }
-  )
-
-  GATEWAYS = %w(comnpay mangopay)
-
-
   # Omnipay.use_gateway(
-  #   :uid => "bitpay",
-  #   :adapter => Omnipay::Adapters::BitPay,
+  #   :uid => "comnpay",
+  #   :adapter => Omnipay::Adapters::Comnpay,
   #   :config => {
-  #     :client_id => ENV['BITPAY_API_KEY']
+  #     :tpe_id => ENV['COMNPAY_TPE_ID'],
+  #     :secret_key => ENV['COMNPAY_SECRET_KEY'],
+  #     :payment => default_payment_config
   #   }
   # )
+
+  # Omnipay.use_gateway(
+  #   :uid => "mangopay",
+  #   :adapter => Omnipay::Adapters::Mangopay,
+  #   :config => {
+  #     :client_id => ENV['MANGOPAY_PUBLIC_KEY'],
+  #     :client_passphrase => ENV['MANGOPAY_PRIVATE_KEY'],
+  #     :wallet_id => ENV['MANGOPAY_WALLET_ID'],
+  #     :payment => default_payment_config
+  #   }
+  # )
+
+  Omnipay.use_gateway(
+    :uid => "bitpay",
+    :adapter => Omnipay::Adapters::BitPay,
+    :config => {
+      :client_id => ENV['BITPAY_API_KEY'],
+      :payment => default_payment_config
+    }
+  )
+
+  GATEWAYS = %w(bitpay)
 
   use Omnipay::Middleware
 
@@ -91,7 +94,11 @@ class OmnipaySampleApp < Sinatra::Base
     params[:amount] = params[:amount].to_i
     params[:fees]   = params[:fees].to_i
 
-    redirection = Omnipay.gateways.find(params[:gateway]).payment_redirection(params.merge(:base_uri => 'http://localhost:9393'))
+    redirection = Omnipay.gateways.find(params[:gateway]).payment_redirection(params.merge(
+      :base_uri => request.base_url,
+      :redirectURL => "#{request.base_url}/success" # REMOVE ME : bitpay test
+    ))
+    
     return redirection.to_a
   end
 
