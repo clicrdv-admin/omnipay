@@ -158,11 +158,11 @@ module Omnipay
     # Logic to redefine in subclasses
     # ===============================
 
-    def payment_page_redirection(amount, reference, callback_url, params)      
+    def payment_page_redirection(params, callback_url)      
       raise NoMethodError, "To redefine in adapter implementation"
     end
 
-    def payment_page_ipn_redirection(amount, reference, callback_url, ipn_url, params)
+    def payment_page_ipn_redirection(params, ipn_url, callback_url)
       raise NoMethodError, "To redefine in adapter implementation"
     end
 

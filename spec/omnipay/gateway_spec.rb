@@ -44,7 +44,7 @@ describe Omnipay::Gateway do
     end
 
     it "should handle GET redirections" do
-      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with({:amount => 1295}, 'http://host.tld/pay/my_uid/ipn', 'http://host.tld/pay/my_uid/callback').and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
 
       response = gateway.payment_redirection(:base_uri => 'http://host.tld', :amount => 1295)
       response.class.should == Rack::Response
@@ -54,7 +54,7 @@ describe Omnipay::Gateway do
 
 
     it "should handle POST redirections" do
-      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['POST', 'http://www.host.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with({:amount => 1295}, 'http://host.tld/pay/my_uid/ipn', 'http://host.tld/pay/my_uid/callback').and_return(['POST', 'http://www.host.tld/payment', {:token => '123456'}])
 
       response = gateway.payment_redirection(:base_uri => 'http://host.tld', :amount => 1295)
       response.class.should == Rack::Response
@@ -65,7 +65,7 @@ describe Omnipay::Gateway do
 
 
     it "should print a deprecation warning if :host is used instead of :base_uri" do
-      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with({:amount => 1295}, 'http://host.tld/pay/my_uid/ipn', 'http://host.tld/pay/my_uid/callback').and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
       
       Kernel.should_receive(:warn).with('[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead.')
       response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)      
@@ -74,8 +74,8 @@ describe Omnipay::Gateway do
 
 
     it "should handle a default base_uri" do
-      @adapter.stub(:request_phase).with(1295, 'http://host.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
-      @adapter.stub(:request_phase).with(1295, 'http://www.anotherhost.tld/pay/my_uid/callback', {}).and_return(['GET', 'http://www.anotherhost.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with({:amount => 1295}, 'http://host.tld/pay/my_uid/ipn', 'http://host.tld/pay/my_uid/callback').and_return(['GET', 'http://www.host.tld/payment', {:token => '123456'}])
+      @adapter.stub(:request_phase).with({:amount => 1295}, 'http://www.anotherhost.tld/pay/my_uid/ipn', 'http://www.anotherhost.tld/pay/my_uid/callback').and_return(['GET', 'http://www.anotherhost.tld/payment', {:token => '123456'}])
       
       Omnipay.configuration.base_uri = "http://www.anotherhost.tld"
 
