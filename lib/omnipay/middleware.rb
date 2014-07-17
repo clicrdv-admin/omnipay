@@ -75,7 +75,7 @@ module Omnipay
       # Force : override the path
       if opts[:force]
         request = Rack::Request.new(request.env.dup)
-        request.path = ipn_path(gateway.uid)
+        request.path_info = ipn_path(gateway.uid)
       end
 
       # Set the formatted response
