@@ -95,7 +95,8 @@ module Omnipay
 
         case params[:result]
         when 'OK'
-          status_successful
+          local_reference = reference(params[:idTransaction])
+          status_successful(local_reference)
         when 'NOK'
           if params[:reason] == 'Abandon de la transaction.'
             status_canceled

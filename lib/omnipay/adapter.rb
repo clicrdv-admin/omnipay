@@ -200,10 +200,9 @@ module Omnipay
     end
 
     def payment_successful(reference, transaction_id, amount)
-      status_successful.merge(
+      status_successful(reference).merge(
         :amount => amount,
-        :transaction_id => transaction_id,
-        :reference => reference 
+        :transaction_id => transaction_id
       )
     end
 
@@ -220,8 +219,8 @@ module Omnipay
       {:success => false, :status => Omnipay::CANCELATION}
     end
 
-    def status_successful
-      {:success => true,  :status => Omnipay::SUCCESS}
+    def status_successful(reference)
+      {:success => true,  :status => Omnipay::SUCCESS, :reference => reference}
     end
 
 
