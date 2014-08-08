@@ -1,5 +1,7 @@
 module Omnipay
 
+  require 'ostruct'
+
   # Base adapter class
   # Inherited by specific implementations
   class Adapter
