@@ -21,8 +21,19 @@ describe Omnipay::Middleware do
       @gateway = double('a gateway')
       @gateway.stub(:ipn_enabled?).and_return(true)
 
+      @another_gateway = double('another gateway')
+      @another_gateway.stub(:ipn_enabled?).and_return(false)
+      @another_gateway.stub(:uid).and_return('another_gateway')
+
       Omnipay.gateways.stub(:find).with(gateway_uid).and_return(@gateway)
+      Omnipay.gateways.stub(:find).with('another_gateway').and_return(@another_gateway)
       Omnipay.gateways.stub(:find).with('another_uid').and_return(nil)
+    end
+
+    it "should intercept requests for the ipn phase, and add the processed response in the request environment" do
+      expect(@gateway).to receive(:ipn_hash).and_return({:success => true})
+      browser.get '/pay/my_gateway/ipn'
+      browser.last_request.env['omnipay.response'].should == {:success => true}
     end
 
     it "should intercept requests for the callback phase and add the processed response in the request environment" do
@@ -39,6 +50,13 @@ describe Omnipay::Middleware do
         browser.last_response.status.should == 404
         browser.last_response.body.should   == 'App : Not Found'
       end
+    end
+
+    it "should call both the IPN and callback urls when IPN is disabled" do
+      expect(@another_gateway).to receive(:ipn_hash).and_return({:success => true})
+      expect(@another_gateway).to receive(:callback_hash).and_return({:success => true})
+      browser.get '/pay/another_gateway/callback?foo=bar'
+      browser.last_request.env['omnipay.response'].should == {:success => true}    
     end
 
     it "should handle custom base paths" do

@@ -22,21 +22,8 @@ describe Omnipay::Adapter do
     custom_payment_param :payer_id, 'the payer\'s mangopay id'
     custom_payment_param :fees,     'the (percent) fees to take on the payment', :default => 0
 
-    # When IPN disabled
-    def payment_page_redirection(params, callback_url)
-    end
-
-    # When IPN enabled
-    def payment_page_redirection_ipn(params, ipn_url, callback_url)
-    end
-
-    def validate_payment_notification(request)
-    end
-
-    def validate_callback_status(request)
-    end
-
   end
+
 
   before(:all) do
     @adapter = SampleAdapter.new(
@@ -45,6 +32,37 @@ describe Omnipay::Adapter do
       :wallet_id  => 'wallet_id'
     )
   end
+
+
+  describe "configuration" do
+
+    it "should not allow a custom payment parameter to override an existing configuration field" do
+
+      expect {
+
+        class InvalidAdapter < Omnipay::Adapter
+          custom_payment_param :reference, 'another reference'
+        end
+
+      }.to raise_error ArgumentError, "Cannot add custom payment param reference, as it already exists and is : The local reference of the payment"
+
+    end
+
+
+    it "should raise an error when trying to call abstract methods" do
+
+      undefined_error = [NoMethodError, "To redefine in adapter implementation"]
+
+      expect { @adapter.payment_page_redirection({}, 'url') }.to            raise_error *undefined_error
+      expect { @adapter.payment_page_ipn_redirection({}, 'url', 'url') }.to raise_error *undefined_error
+      expect { @adapter.validate_payment_notification({}) }.to              raise_error  *undefined_error
+      expect { @adapter.validate_callback_status({}) }.to                   raise_error  *undefined_error
+
+    end
+
+  end
+
+
 
   describe "initialization" do
 
@@ -101,6 +119,7 @@ describe Omnipay::Adapter do
       adapter.default_payment_params.title.should     == 'Ma page de paiement'
       adapter.default_payment_params.fees.should      == 5
     end
+
   end
 
 
@@ -244,6 +263,21 @@ describe Omnipay::Adapter do
       }
 
     end
+
+  end
+
+
+  it "should define convenience methods for statuses and responses" do
+
+    @adapter.send(:status_error, 'an error').should ==            {:success => false, :status => Omnipay::INVALID_RESPONSE, :error_message => 'an error'}
+    @adapter.send(:status_failed, 'an error').should ==           {:success => false, :status => Omnipay::PAYMENT_REFUSED, :error_message => 'an error'}
+    @adapter.send(:status_canceled).should ==                     {:success => false, :status => Omnipay::CANCELATION}
+    @adapter.send(:status_successful, 'the reference').should ==  {:success => true, :status => Omnipay::SUCCESS, :reference => 'the reference'}
+
+    @adapter.send(:payment_error, 'an error').should ==                                                {:success => false, :status => Omnipay::INVALID_RESPONSE, :error_message => 'an error'}
+    @adapter.send(:payment_failed, 'the reference', 'an error').should ==                              {:success => false, :reference => 'the reference', :status => Omnipay::PAYMENT_REFUSED, :error_message => 'an error'}
+    @adapter.send(:payment_canceled, 'the reference').should ==                                        {:success => false, :reference => 'the reference', :status => Omnipay::CANCELATION}
+    @adapter.send(:payment_successful, 'the reference', 'the transaction id', 'the amount').should ==  {:success => true,  :status => Omnipay::SUCCESS, :reference => 'the reference', :amount => 'the amount', :transaction_id => 'the transaction id'}
 
   end
 

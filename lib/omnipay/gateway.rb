@@ -33,15 +33,7 @@ module Omnipay
     # Depending on the adapter used, the options hash may have other mandatory keys. Refer to the adapter's documentation for more details
     # @return [Rack::Response] the GET or POST redirection to the payment provider
     def payment_redirection(opts = {})
-      base_uri = opts.delete :base_uri
-
-      if !base_uri && opts[:host]
-        base_uri = opts.delete :host
-        Kernel.warn "[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead."
-      end
-
-      base_uri ||= Omnipay.configuration.base_uri
-
+      base_uri = get_base_uri(opts)
       raise ArgumentError.new('Missing parameter :base_uri') unless base_uri
 
       ipn_url      = "#{base_uri}#{Omnipay.configuration.base_path}/#{uid}/ipn"
@@ -80,6 +72,21 @@ module Omnipay
       @adapter_class.ipn?
     end
 
+
+    private
+
+    def get_base_uri(opts)
+      base_uri = opts.delete :base_uri
+
+      if !base_uri && opts[:host]
+        base_uri = opts.delete :host
+        Kernel.warn "[DEPRECATION] `host` is deprecated.  Please use `base_uri` instead."
+      end
+
+      base_uri ||= Omnipay.configuration.base_uri
+
+      base_uri
+    end
 
   end
 
