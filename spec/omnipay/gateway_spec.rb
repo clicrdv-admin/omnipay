@@ -95,7 +95,7 @@ describe Omnipay::Gateway do
       @adapter.stub(:request_phase).and_return(['PUT', 'http://www.host.tld/payment', {:token => '123456'}])
 
       @gateway = gateway
-      expect { @gateway.payment_redirection }.to raise_error ArgumentError, "the returned method is neither GET nor POST"
+      expect { @gateway.payment_redirection }.to raise_error ArgumentError, "the returned method is neither GET nor POST"
     end
 
   end

@@ -53,10 +53,10 @@ describe Omnipay::Adapter do
 
       undefined_error = [NoMethodError, "To redefine in adapter implementation"]
 
-      expect { @adapter.payment_page_redirection({}, 'url') }.to            raise_error *undefined_error
-      expect { @adapter.payment_page_ipn_redirection({}, 'url', 'url') }.to raise_error *undefined_error
-      expect { @adapter.validate_payment_notification({}) }.to              raise_error  *undefined_error
-      expect { @adapter.validate_callback_status({}) }.to                   raise_error  *undefined_error
+      expect { @adapter.payment_page_redirection({}, 'url') }.to            raise_error *undefined_error
+      expect { @adapter.payment_page_ipn_redirection({}, 'url', 'url') }.to raise_error *undefined_error
+      expect { @adapter.validate_payment_notification({}) }.to              raise_error  *undefined_error
+      expect { @adapter.validate_callback_status({}) }.to                   raise_error  *undefined_error
 
     end
 
