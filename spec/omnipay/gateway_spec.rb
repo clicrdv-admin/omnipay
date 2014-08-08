@@ -93,7 +93,7 @@ describe Omnipay::Gateway do
     before(:each) do
       @adapter = double('the adapter instance')
       Adapter.stub(:new).with(config).and_return(@adapter)
-      @request = mock('a request')
+      @request = double('a request')
       @request.stub(:params).and_return({'foo' => 'bar'})
     end
  
@@ -110,7 +110,7 @@ describe Omnipay::Gateway do
     before(:each) do
       @adapter = double('the adapter instance')
       Adapter.stub(:new).with(config).and_return(@adapter)
-      @request = mock('a request')
+      @request = double('a request')
       @request.stub(:params).and_return({'foo' => 'bar'})
     end
 
