@@ -33,6 +33,11 @@ describe Omnipay::Gateway do
       gateway.config.should == config
     end
 
+    it "should access the adapters ipn status" do
+      Adapter.stub(:ipn?).and_return(true)
+      gateway.ipn_enabled?.should == true
+    end
+
   end
 
 
@@ -84,6 +89,13 @@ describe Omnipay::Gateway do
 
       response = gateway.payment_redirection(:host => 'http://host.tld', :amount => 1295)      
       response.headers['Location'].should == "http://www.host.tld/payment?token=123456"
+    end
+
+    it "should raise an error if the method is not GET neither POST" do
+      @adapter.stub(:request_phase).and_return(['PUT', 'http://www.host.tld/payment', {:token => '123456'}])
+
+      @gateway = gateway
+      expect { @gateway.payment_redirection }.to raise_error ArgumentError, "the returned method is neither GET nor POST"
     end
 
   end
